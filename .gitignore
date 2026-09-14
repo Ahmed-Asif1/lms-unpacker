@@ -1,0 +1,12 @@
+# Editor directories and files
+.vscode/
+.idea/
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+
+# Temporary files
+temp_extract_*/
+*.tmp
+*.log
