@@ -5,6 +5,32 @@ No certificate provider has approved or sponsored this project yet. The app work
 it has no telemetry, login, updater or runtime downloads. Optional Start menu installation
 is initiated by the user and can be removed as described in the README.
 
+## Maintainer responsibilities
+
+LMS Unpacker is independently maintained. The current author/committer, reviewer of
+external contributions, and prospective signing approver is
+[Ahmed-Asif1 (Muhammad Ahmed Asif)](https://github.com/Ahmed-Asif1).
+The GitLab mirror is maintained under [ahmed007asif](https://gitlab.com/ahmed007asif).
+Contributions from non-committers require maintainer review before merging. Build and
+workflow changes receive the same review attention as application code.
+
+Before using SignPath, all people with signing or source-repository access must enable
+multi-factor authentication. This is a requirement, not a claim that anyone's account
+configuration has been verified here. Every SignPath release signing request will require
+manual approval by the maintainer; passing CI alone will not approve signing.
+
+The application does not transmit user data to a signing service. Local settings and
+history are described in the [privacy policy](../PRIVACY.md). Downloads and their current
+signature status are listed on the [download page](DOWNLOADS.md).
+
+## Application status and provider credit
+
+We are preparing an application to the SignPath Foundation. Approval has not been received,
+and current Windows downloads remain unsigned. After approval and verified integration,
+eligible release pages will carry the credit: "Free code signing provided by SignPath.io,
+certificate by SignPath Foundation." That sentence describes the planned credit, not
+the status of current releases. We will not use provider badges or claim sponsorship early.
+
 ## Free options
 
 **SignPath Foundation** offers free signing for eligible open-source projects. Read its
@@ -70,8 +96,8 @@ Pull-request test jobs receive no signing/release permissions or project secrets
 After testing and committing a version, a maintainer can start the release with:
 
 ```bash
-git tag v1.2.1
-git push origin v1.2.1
+git tag v1.3.0
+git push origin v1.3.0
 ```
 
 Users can verify a downloaded artifact using the GitHub CLI:

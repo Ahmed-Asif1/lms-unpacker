@@ -46,6 +46,32 @@ $ui.QueueAddButton.Add_Click({
     if ($path -and -not $ui.QueueList.Items.Contains($path)) { $null=$ui.QueueList.Items.Add($path); Invalidate-Preview }
 })
 $ui.QueueClearButton.Add_Click({ $ui.QueueList.Items.Clear(); Invalidate-Preview })
+function Edit-Queue([string]$Action) {
+    $index=$ui.QueueList.SelectedIndex
+    if ($index -lt 0) { $ui.StatusText.Text='Select an additional queued path first.'; return }
+    $path=[string]$ui.QueueList.Items[$index]
+    switch ($Action) {
+        'Remove' { $ui.QueueList.Items.RemoveAt($index); $ui.QueueList.SelectedIndex=[Math]::Min($index,$ui.QueueList.Items.Count-1) }
+        'First' { $old=$ui.InputPath.Text; $ui.QueueList.Items[$index]=$old; $ui.InputPath.Text=$path; $ui.QueueList.SelectedIndex=$index }
+        'Up' { if ($index -eq 0) { Edit-Queue 'First'; return }; $ui.QueueList.Items.RemoveAt($index); $ui.QueueList.Items.Insert($index-1,$path); $ui.QueueList.SelectedIndex=$index-1 }
+        'Down' { if ($index -ge $ui.QueueList.Items.Count-1) { return }; $ui.QueueList.Items.RemoveAt($index); $ui.QueueList.Items.Insert($index+1,$path); $ui.QueueList.SelectedIndex=$index+1 }
+    }
+    Invalidate-Preview
+}
+$ui.QueueRemoveButton.Add_Click({ Edit-Queue 'Remove' })
+$ui.QueueFirstButton.Add_Click({ Edit-Queue 'First' })
+$ui.QueueUpButton.Add_Click({ Edit-Queue 'Up' })
+$ui.QueueDownButton.Add_Click({ Edit-Queue 'Down' })
+$ui.QueueList.Add_PreviewKeyDown({ param($sender,$event)
+    if ($event.Key -eq 'Delete') { Edit-Queue 'Remove'; $event.Handled=$true }
+})
+$ui.PlanGrid.Add_SelectionChanged({
+    $row=$ui.PlanGrid.SelectedItem
+    if (-not $row) { $ui.FileDetails.Text='Select a row in File destinations to inspect it.'; return }
+    $size=if ($null -ne $row.Bytes) { [string]$row.Bytes+' bytes' } else { 'Not applicable' }
+    $comparison=if ($row.Comparison) { $row.Comparison } else { 'No filename conflict was found, or content comparison was not applicable.' }
+    $ui.FileDetails.Text="Action: $($row.Action)`r`nSource: $($row.Source)`r`nArchive: $($row.Archive)`r`nIncoming size: $size`r`nDestination: $($row.FullDestination)`r`nWhy: $($row.Reason)`r`n`r`n$comparison`r`n`r`nSkip preserves the existing file. With the default Delete ZIP setting, successfully processed ZIPs are deleted even when different incoming content is skipped. Choose Rename or Keep ZIP before applying if you want to retain it."
+})
 $ui.SaveWorkspaceButton.Add_Click({
     try {
         $name=$ui.WorkspaceName.Text.Trim()

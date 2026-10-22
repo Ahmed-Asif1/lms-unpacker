@@ -73,11 +73,24 @@ try {
     Click-Control ApplyButton; Wait-Desktop
     $journal = (Get-ChildItem -LiteralPath (Join-Path $calculus '.lms-unpacker\history') -Filter '*.json').FullName
     Check-Desktop ($ui.JournalText.Visibility -eq 'Visible') 'undo record not displayed'
+    $history=@(Get-OrganizationHistory @($calculus,$calculus))
+    Check-Desktop ($history.Count -eq 1 -and $history[0].CanPreview -and $history[0].Remaining -eq 1 -and $history[0].Path -eq $journal) 'history must find and deduplicate available records'
+    Show-HistoryDialog $window @($calculus) {
+        param($historyWindow,$records)
+        $records.SelectedIndex=0
+        Check-Desktop ($records.Items.Count -eq 1 -and $historyWindow.FindName('Preview').IsEnabled) 'history selection must enable preview'
+    }
     $state.UndoPath = $journal
     Start-Work 'UndoPreview' @{} $journal; Wait-Desktop
     Check-Desktop $ui.ApplyButton.IsEnabled ('undo preview failed: ' + $ui.ActivityText.Text)
     Click-Control ApplyButton; Wait-Desktop
     Check-Desktop ([IO.File]::Exists((Join-Path $calculus 'Continuity.pdf'))) ('undo failed: ' + $ui.ActivityText.Text)
+    $history=@(Get-OrganizationHistory @($calculus))
+    Check-Desktop (-not $history[0].CanPreview -and $history[0].Remaining -eq 0) 'history must reflect completed undo'
+    $badRecord=Join-Path $calculus '.lms-unpacker/history/broken.json'
+    [IO.File]::WriteAllText($badRecord,'{broken')
+    $history=@(Get-OrganizationHistory @($calculus))
+    Check-Desktop (@($history | Where-Object Status -eq 'Unreadable record').Count -eq 1) 'malformed history must be visible but not usable'
     Write-Host 'PASS: Desktop syllabus topic organization and previewed undo'; $desktopPassed++
 
     $ui.InputPath.Text = Join-Path $fixtureRoot 'bad.zip'
@@ -94,6 +107,8 @@ try {
     $ui.KeepZip.IsChecked=$false; Invalidate-Preview
     Click-Control PreviewButton; Wait-Desktop
     Check-Desktop ($ui.ApplyButton.IsEnabled -and $ui.PlanGrid.Items.Count -eq 2 -and $ui.PlanGrid.Items[1].Action -eq 'Skip') ('queue shared preview failed: '+$ui.ActivityText.Text)
+    $ui.PlanGrid.SelectedIndex=1
+    Check-Desktop ($ui.PlanGrid.Items[1].Comparison -like 'Different content*earlier planned output*' -and $ui.FileDetails.Text.Contains($queueB) -and $ui.FileDetails.Text.Contains('6 bytes')) 'conflict details need correct planned origin, archive and size'
     Check-Desktop (-not [IO.Directory]::Exists($ui.OutputPath.Text)) 'queue preview created output'
     Click-Control ApplyButton; Wait-Desktop
     Check-Desktop ([IO.File]::ReadAllText((Join-Path $ui.OutputPath.Text 'same.txt')) -eq 'first' -and -not [IO.File]::Exists($queueA) -and -not [IO.File]::Exists($queueB)) ('queue apply failed: '+$ui.ActivityText.Text)
@@ -106,6 +121,19 @@ try {
     Restore-Workspace $saved
     Check-Desktop ($ui.InputPath.Text -eq $queueA -and $ui.QueueList.Items[0] -eq $queueB -and $ui.OutputPath.Text.EndsWith('elsewhere') -and $ui.TaskChoice.SelectedIndex -eq 2 -and $ui.GroupChoice.SelectedIndex -eq 2 -and -not $ui.ApplyButton.IsEnabled) 'workspace restore and preview invalidation'
     Write-Host 'PASS: Saved workspace round trip with queue and organization settings'; $desktopPassed++
+
+    Set-SelectedPaths @('first.zip','second.zip','third.zip')
+    $ui.QueueList.SelectedIndex=1; Click-Control QueueUpButton
+    Check-Desktop ($ui.QueueList.Items[0] -eq 'third.zip') 'queue move up'
+    Click-Control QueueDownButton
+    Check-Desktop ($ui.QueueList.Items[1] -eq 'third.zip') 'queue move down'
+    Click-Control QueueFirstButton
+    Check-Desktop ($ui.InputPath.Text -eq 'third.zip' -and $ui.QueueList.Items[1] -eq 'first.zip') 'queue promote must retain old first input'
+    Click-Control QueueRemoveButton
+    Check-Desktop ($ui.QueueList.Items.Count -eq 1 -and $ui.QueueList.Items[0] -eq 'second.zip' -and -not $ui.ApplyButton.IsEnabled) 'queue remove and invalidate'
+    $ui.QueueList.SelectedIndex=0; Click-Control QueueUpButton
+    Check-Desktop ($ui.InputPath.Text -eq 'second.zip' -and $ui.QueueList.Items[0] -eq 'third.zip') 'move up at queue boundary must swap first input'
+    Write-Host 'PASS: Queue reordering, promotion, removal and preview invalidation'; $desktopPassed++
 
     Import-Module (Join-Path $PSScriptRoot '../LmsUnpacker.psm1') -Force
     $seed=[pscustomobject]@{Course='MATH-101'; Pattern='mystery.pdf'; Folder='Lectures/Unscheduled'; Topic='New topic'; Reason='Manual assignment'}

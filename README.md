@@ -3,6 +3,9 @@
 Turn messy LMS ZIP downloads into usable course folders. An offline Windows desktop
 app and Windows/Linux CLI with three jobs: **flatten downloads**, **just unzip**, or **organize courses**.
 
+[Downloads](docs/DOWNLOADS.md) · [Privacy policy](PRIVACY.md) ·
+[Code signing policy](docs/SIGNING.md) · [Contributing](CONTRIBUTING.md) · [Roadmap](docs/ROADMAP.md)
+
 **Defaults: flatten, skip existing filenames, delete successfully processed ZIPs.**
 When a filename already exists, its incoming version is discarded even if its content
 is different. Choose **Rename** to keep both versions, or **Keep ZIP** to retain the
@@ -40,6 +43,9 @@ The app waits for active work to finish before closing.
 ### Workspaces, queues and destinations
 
 - Open **Saved workspaces and queue**, enter a name, and save the current paths and settings.
+- Select a queued path to **Move up**, **Move down**, **Make first** or **Remove selected**.
+  The main input runs first; Skip keeps the first content for each destination name.
+  Changing the queue requires a fresh preview.
   Select the saved name next time. Saving with the same name updates it; Remove forgets it.
   Paths and settings stay in your local preferences file. Profiles remain at the paths you chose.
 - Select multiple ZIPs in **Choose ZIP**, or drop multiple folders/ZIPs into the window.
@@ -50,6 +56,13 @@ The app waits for active work to finish before closing.
   in place with undo; the output setting is disabled for the loose-only task.
 - Preview checks the whole queue, including collisions between inputs. Apply stops on the
   first failed queue item. Completed work remains, and errors retain the affected ZIP.
+- **Content comparison** distinguishes identical and different content. Select a row and
+  open **Selected file details** for its source archive, incoming size, destination and
+  SHA-256 comparison. This also identifies conflicts with earlier planned outputs.
+- **History / undo** finds organization records in the selected folders and queue. Choose
+  another original folder if needed. Available records are validated in an undo preview;
+  changed files and occupied original paths prevent restoration. ZIP deletion and extraction
+  cannot be undone here. Completed and unreadable records remain visible with their status.
 - Progress reports the current queue item, phase and entry/file count. **Cancel safely**
   finishes the current entry read or archive publication before stopping. A completed
   archive may already have been deleted according to your setting. Unprocessed ZIPs remain.
@@ -300,7 +313,7 @@ The test suite uses temporary fixtures inside `tests/.runs`, including malicious
 paths, CRC failures, conflicts, grouping, course profiles, undo, and junctions. It never
 uses personal course documents. The release builder runs the engine and real WPF-control
 tests, then builds `dist/LMS-Unpacker.exe`, `dist/LMS-Unpacker-CLI.exe`, and the optional
-`dist/LMS-Unpacker-1.2.1.zip` from an explicit file list. It checks both standalone
+`dist/LMS-Unpacker-1.3.0.zip` from an explicit file list. It checks both standalone
 executables, CLI behavior, a shortcut in an isolated test folder, and temporary cleanup.
 Each artifact gets a SHA-256 checksum. Existing versioned ZIPs are not overwritten;
 the stable EXE filenames are refreshed when a new release is built. GitHub Actions runs tests on Windows PowerShell 5.1

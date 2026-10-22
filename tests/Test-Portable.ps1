@@ -25,6 +25,14 @@ try {
     Make-PortableZip $source @{'nested/note.txt'='different'}
     $r=Invoke-LmsUnpacker -Path $source -OutputPath $outputFolder
     Assert-Portable ($r.Skipped -eq 1 -and -not [IO.File]::Exists($source) -and [IO.File]::ReadAllText((Join-Path $outputFolder 'note.txt')) -eq 'first') 'Skip and delete defaults at external destination'
+    Assert-Portable ($r.Details[0].Comparison -like 'Different content*existing file*' -and $r.Details[0].Bytes -eq 9) 'Different existing content must be explicit'
+    Make-PortableZip $source @{'nested/note.txt'='first'}
+    $r=Invoke-LmsUnpacker -Path $source -OutputPath $outputFolder -Preview $true
+    Assert-Portable ($r.Details[0].Action -eq 'Duplicate' -and $r.Details[0].Comparison -like 'Identical content*existing file*') 'Identical content comparison'
+    [IO.File]::Delete($source)
+    Make-PortableZip $source @{'nested/note.txt'='new version'}
+    $r=Invoke-LmsUnpacker -Path $source -OutputPath $outputFolder -Preview $true -Conflict Rename
+    Assert-Portable ($r.Details[0].Target.EndsWith('note_1.txt') -and $r.Details[0].Comparison -like 'Different content*') 'Renamed files must retain conflict explanation'
     Write-Host 'PASS: External ZIP destination, preview and defaults'
 
     $a=Join-Path $inputFolder 'a.zip'; $b=Join-Path $inputFolder 'b.zip'

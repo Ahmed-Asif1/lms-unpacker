@@ -44,6 +44,8 @@
               <TextBlock Text="Additional queued paths"/>
               <ListBox x:Name="QueueList" Height="90" AutomationProperties.Name="Additional queued folders and ZIPs"/>
               <WrapPanel Margin="0,6,0,8"><Button x:Name="QueueAddButton" Content="Add current path"/><Button x:Name="QueueClearButton" Content="Clear queue"/></WrapPanel>
+              <WrapPanel><Button x:Name="QueueFirstButton" Content="Make first"/><Button x:Name="QueueRemoveButton" Content="Remove selected"/><Button x:Name="QueueUpButton" Content="Move up"/><Button x:Name="QueueDownButton" Content="Move down"/></WrapPanel>
+              <TextBlock Text="The path above runs first. With Skip, the first file with each name wins. Reorder here, then preview again." TextWrapping="Wrap" Margin="0,8,0,8"/>
             </StackPanel>
           </Expander>
           <TextBlock Text="1  Choose what to do" FontSize="19" FontWeight="SemiBold"/>
@@ -74,14 +76,15 @@
         </StackPanel>
       </ScrollViewer>
       <Grid Grid.Column="2"><Grid.RowDefinitions><RowDefinition Height="Auto"/><RowDefinition Height="Auto"/><RowDefinition Height="*"/><RowDefinition Height="Auto"/></Grid.RowDefinitions>
-        <DockPanel><Button x:Name="UndoButton" Content="_Undo organization…" DockPanel.Dock="Right" Margin="8,0,0,0"/><Button x:Name="ClassifyButton" Content="Add rule for selected file…" DockPanel.Dock="Right"/><TextBlock Text="2  Review" FontSize="19" FontWeight="SemiBold" VerticalAlignment="Center"/></DockPanel>
+        <DockPanel><Button x:Name="UndoButton" Content="_History / undo…" DockPanel.Dock="Right" Margin="8,0,0,0"/><Button x:Name="ClassifyButton" Content="Add rule for selected file…" DockPanel.Dock="Right"/><TextBlock Text="2  Review" FontSize="19" FontWeight="SemiBold" VerticalAlignment="Center"/></DockPanel>
         <StackPanel Grid.Row="1"><TextBlock x:Name="SummaryText" Text="Choose your materials, then preview. Nothing changes until you apply." TextWrapping="Wrap" Margin="0,10,0,4" AutomationProperties.LiveSetting="Polite"/><CheckBox x:Name="UnclassifiedOnly" Content="Show only unclassified files" Margin="0,4,0,8"/></StackPanel>
         <TabControl Grid.Row="2" x:Name="ResultsTabs" AutomationProperties.Name="Preview and activity">
           <TabItem Header="_File destinations"><DataGrid x:Name="PlanGrid" AutoGenerateColumns="False" IsReadOnly="True" CanUserAddRows="False" CanUserDeleteRows="False" SelectionMode="Extended" EnableRowVirtualization="True" GridLinesVisibility="Horizontal" HeadersVisibility="Column" AutomationProperties.Name="Planned file destinations and reasons">
             <DataGrid.RowStyle><Style TargetType="DataGridRow"><Setter Property="ToolTip" Value="{Binding FullDestination}"/></Style></DataGrid.RowStyle>
-            <DataGrid.Columns><DataGridTextColumn Header="Action" Binding="{Binding Action}" Width="85"/><DataGridTextColumn Header="File" Binding="{Binding File}" Width="170"/><DataGridTextColumn Header="Destination" Binding="{Binding Destination}" Width="260"/><DataGridTextColumn Header="Why" Binding="{Binding Reason}" Width="280"/></DataGrid.Columns>
+            <DataGrid.Columns><DataGridTextColumn Header="Action" Binding="{Binding Action}" Width="85"/><DataGridTextColumn Header="File" Binding="{Binding File}" Width="170"/><DataGridTextColumn Header="Content comparison" Binding="{Binding ComparisonLabel}" Width="220"/><DataGridTextColumn Header="Destination" Binding="{Binding Destination}" Width="260"/><DataGridTextColumn Header="Why" Binding="{Binding Reason}" Width="280"/></DataGrid.Columns>
           </DataGrid></TabItem>
           <TabItem Header="_Activity and errors"><TextBox x:Name="ActivityText" IsReadOnly="True" AcceptsReturn="True" TextWrapping="NoWrap" VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Auto" FontFamily="Consolas" FontSize="12" AutomationProperties.Name="Activity log and error details"/></TabItem>
+          <TabItem Header="Selected file _details"><TextBox x:Name="FileDetails" IsReadOnly="True" TextWrapping="Wrap" VerticalScrollBarVisibility="Auto" AutomationProperties.Name="Selected file source, destination, size and content comparison"/></TabItem>
         </TabControl>
         <TextBox Grid.Row="3" x:Name="JournalText" IsReadOnly="True" TextWrapping="Wrap" Visibility="Collapsed" Margin="0,10,0,0" AutomationProperties.Name="Saved undo record path"/>
       </Grid>

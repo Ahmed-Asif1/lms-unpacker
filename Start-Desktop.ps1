@@ -13,7 +13,7 @@ try {
         'SettingsPanel','TaskChoice','TaskHint','OrganizationPanel','ProfileChoice','CustomProfilePanel','ProfilePath','ProfileBrowseButton',
         'CreateProfileButton','GroupChoice','GroupHint','ConflictChoice','KeepZip','ScanChildren','DefaultsNotice','PreviewButton','UndoButton',
         'SummaryText','ResultsTabs','PlanGrid','ActivityText','JournalText','StatusText','BusyProgress','OpenFolderButton','ApplyButton',
-        'WorkspaceChoice','WorkspaceName','SaveWorkspaceButton','RemoveWorkspaceButton','QueueList','QueueAddButton','QueueClearButton',
+        'WorkspaceChoice','WorkspaceName','SaveWorkspaceButton','RemoveWorkspaceButton','QueueList','QueueAddButton','QueueClearButton','QueueFirstButton','QueueRemoveButton','QueueUpButton','QueueDownButton','FileDetails',
         'EditProfileButton','ClassifyButton','OutputPath','OutputBrowseButton','CancelButton','UnclassifiedOnly','QueueExpander')) {
         $ui[$name] = $window.FindName($name)
         if (-not $ui[$name]) { throw "Missing interface control: $name" }
@@ -38,7 +38,7 @@ try {
         $null = [Windows.MessageBox]::Show($window,$Message,'LMS Unpacker','OK','Warning')
     }
     function Update-Hints {
-        $ui.QueueExpander.Header = 'Saved workspaces and queue (' + $ui.QueueList.Items.Count + ' additional)'
+        $ui.QueueExpander.Header = 'Workspaces / queue (' + $ui.QueueList.Items.Count + ')'
         $organize = $ui.TaskChoice.SelectedIndex -ge 2
         $ui.OrganizationPanel.Visibility = if ($organize) { 'Visible' } else { 'Collapsed' }
         $ui.CustomProfilePanel.Visibility = if ($ui.ProfileChoice.SelectedIndex -eq 2) { 'Visible' } else { 'Collapsed' }
@@ -204,7 +204,8 @@ try {
                 $rows = @($result.Details | ForEach-Object {
                     $destination = if ($_.PSObject.Properties['Target']) { $_.Target } else { $_.Path }
                     $relative = if ($destination -and $destination.StartsWith($rootPrefix,[StringComparison]::OrdinalIgnoreCase)) { $destination.Substring($rootPrefix.Length) } else { $destination }
-                    [pscustomobject]@{ Action=$_.Action; File=[IO.Path]::GetFileName($_.Source); Source=$_.Source; Course=$_.Course; Destination=$relative; FullDestination=$destination; Reason=$_.Reason }
+                    $comparisonLabel = if ($_.Comparison -like 'Identical*') { 'Identical content' } elseif ($_.Comparison) { 'Different content' } else { '' }
+                    [pscustomobject]@{ Action=$_.Action; File=[IO.Path]::GetFileName($_.Source); Source=$_.Source; Course=$_.Course; Destination=$relative; FullDestination=$destination; Reason=$_.Reason; Comparison=$_.Comparison; ComparisonLabel=$comparisonLabel; Bytes=$_.Bytes; Archive=$_.Archive }
                 })
                 $ui.PlanGrid.ItemsSource = $rows
                 Update-ReviewFilter
@@ -236,6 +237,7 @@ try {
     })
     . (Join-Path $PSScriptRoot 'ProfileEditor.ps1')
     . (Join-Path $PSScriptRoot 'DesktopFeatures.ps1')
+    . (Join-Path $PSScriptRoot 'HistoryDialog.ps1')
     $ui.PreviewButton.Add_Click({ try { $state.UndoPath = $null; Start-Work 'Preview' (Get-Options) $null } catch { Show-Problem $_.Exception.Message } })
     $ui.ApplyButton.Add_Click({
         try {
@@ -285,9 +287,8 @@ try {
     })
     $ui.UndoButton.Add_Click({
         try {
-            $dialog = [Microsoft.Win32.OpenFileDialog]::new()
-            $dialog.Title = 'Choose an undo record from .lms-unpacker\history'; $dialog.Filter = 'Undo records (*.json)|*.json'
-            if ($dialog.ShowDialog($window)) { $state.UndoPath = $dialog.FileName; Start-Work 'UndoPreview' @{} $state.UndoPath }
+            $record = Show-HistoryDialog $window (@($ui.InputPath.Text) + @($ui.QueueList.Items))
+            if ($record) { $state.UndoPath = $record; Start-Work 'UndoPreview' @{} $state.UndoPath }
         } catch { Show-Problem $_.Exception.Message }
     })
     $ui.OpenFolderButton.Add_Click({

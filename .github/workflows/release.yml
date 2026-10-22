@@ -81,5 +81,7 @@ jobs:
           These artifacts were built and tested in GitHub Actions. Check the SHA-256 sidecars and verify provenance with `gh attestation verify <download> --repo Ahmed-Asif1/lms-unpacker`.
 
           Windows artifacts are currently unsigned with Authenticode. Build attestations verify origin; they are not an antivirus or Windows trust certification. See docs/SIGNING.md in the repository for the code signing policy.
+
+          We are preparing a SignPath Foundation application; no approval or SignPath-signed release is claimed. [Code signing policy](https://github.com/Ahmed-Asif1/lms-unpacker/blob/main/docs/SIGNING.md) · [Privacy policy](https://github.com/Ahmed-Asif1/lms-unpacker/blob/main/PRIVACY.md) · [Download guide](https://github.com/Ahmed-Asif1/lms-unpacker/blob/main/docs/DOWNLOADS.md).
           NOTES
           gh release create "$RELEASE_TAG" --verify-tag --draft --title "LMS Unpacker $RELEASE_TAG" --notes-file notes.md dist/*

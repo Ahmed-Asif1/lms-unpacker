@@ -1,5 +1,15 @@
 # Changelog
 
+## 1.3.0
+
+- Add organization history discovery with record status and validated undo previews.
+- Explain identical and different content conflicts, including earlier queued outputs,
+  with source archive, incoming size and SHA-256 details in the desktop and CLI.
+- Reorder, promote and remove queued inputs; invalidate previews when order changes.
+- Publish download, privacy, contribution and code-signing policies with honest unsigned status.
+- Add maintainer application guidance and community issue templates; update the offline guide.
+- Preserve default skip-existing and delete-successful-ZIP behavior.
+
 ## 1.2.1
 
 - Keep the visual profile editor's Save label readable under Windows PowerShell 5.1's legacy encoding.

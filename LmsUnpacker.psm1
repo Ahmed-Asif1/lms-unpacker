@@ -142,24 +142,28 @@ function Get-LmsClassification([string]$Name, [string]$Course, $Profile, [string
 function Get-LmsTarget([string]$Target, [string]$Hash, [string]$Conflict, [hashtable]$Planned) {
     $candidate = $Target
     $number = 0
+    $comparison = ''
     while ($true) {
         Assert-PlainPath $candidate
         $exists = Test-Path -LiteralPath $candidate
         if ($exists -and -not (Test-Path -LiteralPath $candidate -PathType Leaf)) { throw "A folder blocks a file: $candidate" }
         if (-not $exists -and -not $Planned.ContainsKey($candidate)) {
             $Planned[$candidate] = $Hash
-            return [pscustomobject]@{Path=$candidate; Action='Write'}
+            return [pscustomobject]@{Path=$candidate; Action='Write'; Comparison=$comparison}
         }
         $existingHash = if ($Planned.ContainsKey($candidate)) { $Planned[$candidate] } else { Get-FileDigest $candidate }
         if ($existingHash.StartsWith('preview-source:')) {
             $existingHash = Get-FileDigest $existingHash.Substring(15)
             $Planned[$candidate] = $existingHash
         }
-        if ($existingHash -eq $Hash) { return [pscustomobject]@{Path=$candidate; Action='Duplicate'} }
-        if ($Conflict -eq 'Skip') { return [pscustomobject]@{Path=$candidate; Action='Skip'} }
+        $origin = if ($Planned.ContainsKey($candidate)) { 'earlier planned output' } else { 'existing file' }
+        $match = if ($existingHash -eq $Hash) { 'Identical content (SHA-256)' } else { 'Different content (SHA-256)' }
+        $comparison = "$match versus $origin at $candidate. Incoming SHA-256: $Hash. Compared SHA-256: $existingHash."
+        if ($existingHash -eq $Hash) { return [pscustomobject]@{Path=$candidate; Action='Duplicate'; Comparison=$comparison} }
+        if ($Conflict -eq 'Skip') { return [pscustomobject]@{Path=$candidate; Action='Skip'; Comparison=$comparison} }
         if ($Conflict -eq 'Overwrite') {
             $Planned[$candidate] = $Hash
-            return [pscustomobject]@{Path=$candidate; Action='Overwrite'}
+            return [pscustomobject]@{Path=$candidate; Action='Overwrite'; Comparison=$comparison}
         }
         $number++
         $candidate = Join-Path ([IO.Path]::GetDirectoryName($Target)) ('{0}_{1}{2}' -f [IO.Path]::GetFileNameWithoutExtension($Target), $number, [IO.Path]::GetExtension($Target))
@@ -283,7 +287,7 @@ function Invoke-LmsArchive($Zip, $Options, $Profile, [hashtable]$Planned) {
             $stage = if ($scratch) { Join-Path $scratch ($items.Count.ToString() + '.data') } else { $null }
             $hash = Copy-LmsEntry $entry $stage $checksums[$entryIndex]
             $decision = Get-LmsTarget $target $hash $Options.Conflict $Planned
-            $items.Add([pscustomobject]@{Path=$decision.Path; Action=$decision.Action; Stage=$stage; Source=$relative; Reason=$reason; Course=$courseName})
+            $items.Add([pscustomobject]@{Path=$decision.Path; Action=$decision.Action; Stage=$stage; Source=$relative; Reason=$reason; Course=$courseName; Comparison=$decision.Comparison; Bytes=$entry.Length; Archive=$Zip.FullName})
         }
         $filePaths = @{}
         foreach ($item in $items) { if ($item.Action -ne 'Directory') { $filePaths[$item.Path] = $true } }
@@ -298,6 +302,7 @@ function Invoke-LmsArchive($Zip, $Options, $Profile, [hashtable]$Planned) {
         $Options.Control.Phase = 'Finishing archive safely'
         foreach ($item in $items) {
             Write-Host "  [$($item.Action)] $($item.Path)"
+            if ($item.Action -ne 'Directory' -and $item.Comparison) { Write-Host "    $($item.Comparison)" }
             if ($Options.Mode -eq 'Organize' -and $item.Action -ne 'Directory') { Write-Host "    Why: $($item.Reason)" }
             if (-not $Options.Preview) {
                 if ($item.Action -eq 'Directory') { $null = [IO.Directory]::CreateDirectory($item.Path) }
@@ -315,7 +320,7 @@ function Invoke-LmsArchive($Zip, $Options, $Profile, [hashtable]$Planned) {
             Written=@($items | Where-Object { $_.Action -in @('Write','Overwrite') }).Count
             Skipped=@($items | Where-Object { $_.Action -in @('Skip','Duplicate') }).Count
             Unclassified=@($items | Where-Object { $_.Reason -like 'Unclassified archive entry*' }).Count
-            Details=@($items | Select-Object Source, @{Name='Target';Expression={$_.Path}}, Action, Reason, Course)
+            Details=@($items | Select-Object Source, @{Name='Target';Expression={$_.Path}}, Action, Reason, Course, Comparison, Bytes, Archive)
         }
     } finally {
         if ($archive) { $archive.Dispose() }
@@ -360,12 +365,13 @@ function Invoke-LmsOrganization($Files, [string]$Root, $Options, $Profile, [hash
             # Existing-only previews need no content read when there is nothing to compare.
             # A real move still hashes the source for the undo record.
             $Planned[$target] = 'preview-source:' + $file.FullName
-            $decision = [pscustomobject]@{Path=$target; Action='Write'}
+            $decision = [pscustomobject]@{Path=$target; Action='Write'; Comparison=''}
         } else {
             $hash = Get-FileDigest $file.FullName
             $decision = Get-LmsTarget $target $hash $Options.Conflict $Planned
         }
-        $details.Add([pscustomobject]@{Source=$file.FullName; Target=$decision.Path; Action=$decision.Action; Reason=$classification.Reason; Course=$courseName})
+        $details.Add([pscustomobject]@{Source=$file.FullName; Target=$decision.Path; Action=$decision.Action; Reason=$classification.Reason; Course=$courseName; Comparison=$decision.Comparison; Bytes=$file.Length; Archive=$null})
+        if ($decision.Comparison) { Write-Host "    $($decision.Comparison)" }
         if ($decision.Action -ne 'Write') { Write-Host "  [$($decision.Action); original kept] $($file.FullName)"; continue }
         Write-Host "  [Move] $($file.FullName) -> $($decision.Path)"
         Write-Host "    Why: $($classification.Reason)"
