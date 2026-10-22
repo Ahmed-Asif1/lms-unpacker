@@ -113,6 +113,7 @@ try {
         param($editor,$courses,$rules)
         Check-Desktop ($courses.Rows.Count -eq 6 -and $rules.Rows[0].Pattern -eq 'mystery.pdf') 'profile editor must load courses and prepend review rule'
         Check-Desktop ($editor.FindName('Rules').Columns.Count -eq 5 -and $editor.FindName('Courses').Columns.Count -eq 3) 'profile controls missing'
+        Check-Desktop ($editor.FindName('Save').Content -eq '_Save profile copy...') 'profile editor text must decode correctly in Windows PowerShell 5.1'
     }
     Write-Host 'PASS: Native profile editor loads courses and seeded review rules'; $desktopPassed++
 

@@ -24,7 +24,7 @@ function Show-ProfileEditor($Owner, [string]$ProfilePath, $Seed, [scriptblock]$I
   </DataGrid.Columns></DataGrid></TabItem>
  </TabControl>
  <TextBlock Grid.Row="2" Margin="0,12,0,12" TextWrapping="Wrap" Text="Example: BIO-101 | *cell* | Lectures/Week 02 | Cell biology. Use Assignments or Books for other categories. * matches any text. Rules match filenames, first match wins. New review rules are inserted first. Unknown weeks can use Lectures/Unscheduled."/>
- <DockPanel Grid.Row="3"><Button x:Name="Save" Content="_Save profile copy…" Padding="16,10" DockPanel.Dock="Right"/><TextBlock x:Name="Error" TextWrapping="Wrap" VerticalAlignment="Center" Margin="0,0,12,0" AutomationProperties.LiveSetting="Polite"/></DockPanel>
+ <DockPanel Grid.Row="3"><Button x:Name="Save" Content="_Save profile copy..." Padding="16,10" DockPanel.Dock="Right"/><TextBlock x:Name="Error" TextWrapping="Wrap" VerticalAlignment="Center" Margin="0,0,12,0" AutomationProperties.LiveSetting="Polite"/></DockPanel>
  </Grid>
 </Window>
 '@

@@ -300,7 +300,7 @@ The test suite uses temporary fixtures inside `tests/.runs`, including malicious
 paths, CRC failures, conflicts, grouping, course profiles, undo, and junctions. It never
 uses personal course documents. The release builder runs the engine and real WPF-control
 tests, then builds `dist/LMS-Unpacker.exe`, `dist/LMS-Unpacker-CLI.exe`, and the optional
-`dist/LMS-Unpacker-1.2.0.zip` from an explicit file list. It checks both standalone
+`dist/LMS-Unpacker-1.2.1.zip` from an explicit file list. It checks both standalone
 executables, CLI behavior, a shortcut in an isolated test folder, and temporary cleanup.
 Each artifact gets a SHA-256 checksum. Existing versioned ZIPs are not overwritten;
 the stable EXE filenames are refreshed when a new release is built. GitHub Actions runs tests on Windows PowerShell 5.1

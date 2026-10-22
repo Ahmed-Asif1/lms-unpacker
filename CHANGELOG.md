@@ -1,5 +1,10 @@
 # Changelog
 
+## 1.2.1
+
+- Keep the visual profile editor's Save label readable under Windows PowerShell 5.1's legacy encoding.
+- Avoid running a duplicate test workflow on release tags; the release workflow already calls the complete suite.
+
 ## 1.2.0
 
 - Add a visual course/syllabus editor and unclassified-file review with reusable rules.
