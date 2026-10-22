@@ -1,0 +1,312 @@
+{
+  "Version": 1,
+  "Courses": [
+    {
+      "Code": "CS-110",
+      "Name": "Fundamentals of Computer Programming",
+      "Folder": "Fundamentals of Computers"
+    },
+    {
+      "Code": "CS-117",
+      "Name": "Applications of ICT",
+      "Folder": "ICT"
+    },
+    {
+      "Code": "CS-123",
+      "Name": "Quantitative Reasoning I",
+      "Folder": "Quantitative"
+    },
+    {
+      "Code": "HU-131",
+      "Name": "Understanding of Quran I",
+      "Folder": "Understanding of Quran"
+    },
+    {
+      "Code": "MATH-101",
+      "Name": "Calculus and Analytical Geometry",
+      "Folder": "Calculus"
+    },
+    {
+      "Code": "MATH-125",
+      "Name": "Discrete Structures",
+      "Folder": "Discrete"
+    }
+  ],
+  "Rules": [
+    {
+      "Course": "MATH-101",
+      "Pattern": "Composition*",
+      "Folder": "Lectures/Week 01",
+      "Topic": "Functions",
+      "Reason": "Week 1 reviews functions and graphs."
+    },
+    {
+      "Course": "MATH-101",
+      "Pattern": "Function of One Variable*",
+      "Folder": "Lectures/Week 01",
+      "Topic": "Functions",
+      "Reason": "Week 1 reviews functions, domain and range."
+    },
+    {
+      "Course": "MATH-101",
+      "Pattern": "Functions*",
+      "Folder": "Lectures/Week 01",
+      "Topic": "Functions",
+      "Reason": "Week 1 reviews functions and graphs."
+    },
+    {
+      "Course": "MATH-101",
+      "Pattern": "Piecewise*",
+      "Folder": "Lectures/Week 01",
+      "Topic": "Functions",
+      "Reason": "Piecewise functions belong to the Week 1 functions review."
+    },
+    {
+      "Course": "MATH-101",
+      "Pattern": "Dom.*",
+      "Folder": "Lectures/Week 01",
+      "Topic": "Functions",
+      "Reason": "Domain and range belong to the Week 1 functions review."
+    },
+    {
+      "Course": "MATH-101",
+      "Pattern": "Continuity*",
+      "Folder": "Lectures/Week 02",
+      "Topic": "Limits and continuity",
+      "Reason": "Continuity is explicitly listed in Week 2."
+    },
+    {
+      "Course": "MATH-101",
+      "Pattern": "Limit*",
+      "Folder": "Lectures/Weeks 02-03",
+      "Topic": "Limits and continuity",
+      "Reason": "Limits appear in both Weeks 2 and 3; the filename cannot distinguish them."
+    },
+    {
+      "Course": "MATH-101",
+      "Pattern": "Derivativ*",
+      "Folder": "Lectures/Week 03",
+      "Topic": "Differentiation",
+      "Reason": "Differentiation is listed in Week 3."
+    },
+    {
+      "Course": "MATH-101",
+      "Pattern": "Differentiability*",
+      "Folder": "Lectures/Week 03",
+      "Topic": "Differentiation",
+      "Reason": "Differentiability matches the Week 3 differentiation topic."
+    },
+    {
+      "Course": "MATH-101",
+      "Pattern": "Hyperbolic*Derivativ*",
+      "Folder": "Lectures/Week 03",
+      "Topic": "Differentiation",
+      "Reason": "Derivative techniques match Week 3; this is a syllabus topic match, not a delivery date."
+    },
+    {
+      "Course": "MATH-101",
+      "Pattern": "Tangent*",
+      "Folder": "Lectures/Weeks 03-04",
+      "Topic": "Tangents and rates of change",
+      "Reason": "Tangent lines are in Week 3 and rate of change in Week 4; this material spans both."
+    },
+    {
+      "Course": "MATH-101",
+      "Pattern": "Critical points*",
+      "Folder": "Lectures/Week 04",
+      "Topic": "Extrema and mean value theorems",
+      "Reason": "Extrema, Rolle and mean value theorems are listed in Week 4."
+    },
+    {
+      "Course": "MATH-101",
+      "Pattern": "Extrema*",
+      "Folder": "Lectures/Week 04",
+      "Topic": "Extrema and mean value theorems",
+      "Reason": "Extrema and mean value theorems are listed in Week 4."
+    },
+    {
+      "Course": "MATH-101",
+      "Pattern": "Extreme val*",
+      "Folder": "Lectures/Week 04",
+      "Topic": "Extrema and mean value theorems",
+      "Reason": "Extreme values match Week 4 extrema."
+    },
+    {
+      "Course": "MATH-101",
+      "Pattern": "Concavity*",
+      "Folder": "Lectures/Week 05",
+      "Topic": "Concavity",
+      "Reason": "Concavity is explicitly listed in Week 5."
+    },
+    {
+      "Course": "MATH-101",
+      "Pattern": "local extreme values and concavity*",
+      "Folder": "Lectures/Weeks 04-05",
+      "Topic": "Extrema and concavity",
+      "Reason": "The title combines Week 4 extrema and Week 5 concavity."
+    },
+    {
+      "Course": "MATH-101",
+      "Pattern": "Indeterminate*",
+      "Folder": "Lectures/Week 06",
+      "Topic": "Indeterminate forms and LHopital",
+      "Reason": "Indeterminate forms and LHopital are listed in Week 6."
+    },
+    {
+      "Course": "MATH-101",
+      "Pattern": "L*Hopital*",
+      "Folder": "Lectures/Week 06",
+      "Topic": "Indeterminate forms and LHopital",
+      "Reason": "LHopital rule is listed in Week 6."
+    },
+    {
+      "Course": "MATH-101",
+      "Pattern": "Riemann*",
+      "Folder": "Lectures/Week 07",
+      "Topic": "Definite integrals and Riemann sums",
+      "Reason": "Riemann sums and definite integrals are listed in Week 7."
+    },
+    {
+      "Course": "MATH-101",
+      "Pattern": "Def. Intg*",
+      "Folder": "Lectures/Week 07",
+      "Topic": "Definite integrals and Riemann sums",
+      "Reason": "The abbreviated title indicates definite integrals, listed in Week 7."
+    },
+    {
+      "Course": "MATH-101",
+      "Pattern": "Area between curves*",
+      "Folder": "Lectures/Unscheduled",
+      "Topic": "Areas between curves",
+      "Reason": "Topic recognized, but the supplied syllabus does not explicitly assign it a week."
+    },
+    {
+      "Course": "MATH-101",
+      "Pattern": "Tri. Fun., Limits*",
+      "Folder": "Lectures/Unscheduled",
+      "Topic": "Functions and limits",
+      "Reason": "The title mixes trigonometric functions and limits; no single week is established."
+    },
+    {
+      "Course": "MATH-101",
+      "Pattern": "Calculus * Edi*",
+      "Folder": "Books",
+      "Reason": "Edition in this abbreviated title identifies a textbook."
+    },
+    {
+      "Course": "CS-117",
+      "Pattern": "LEC1*",
+      "Folder": "Lectures/Week 01"
+    },
+    {
+      "Course": "CS-117",
+      "Pattern": "*Computing Fundamentals*",
+      "Folder": "Lectures/Week 02"
+    },
+    {
+      "Course": "CS-117",
+      "Pattern": "Operating Systems*",
+      "Folder": "Lectures/Week 02"
+    },
+    {
+      "Course": "CS-117",
+      "Pattern": "Von Neumann*",
+      "Folder": "Lectures/Week 02"
+    },
+    {
+      "Course": "CS-117",
+      "Pattern": "Boolean Algebra*",
+      "Folder": "Lectures/Week 03"
+    },
+    {
+      "Course": "CS-117",
+      "Pattern": "Number Systems*",
+      "Folder": "Lectures/Week 03"
+    },
+    {
+      "Course": "CS-117",
+      "Pattern": "Lecture 3*",
+      "Folder": "Lectures/Week 03"
+    },
+    {
+      "Course": "CS-117",
+      "Pattern": "Lecture 4*",
+      "Folder": "Lectures/Week 04"
+    },
+    {
+      "Course": "CS-117",
+      "Pattern": "Lecture 5*",
+      "Folder": "Lectures/Week 05"
+    },
+    {
+      "Course": "CS-117",
+      "Pattern": "Lecture 6*",
+      "Folder": "Lectures/Week 06"
+    },
+    {
+      "Course": "CS-117",
+      "Pattern": "Git Commands*",
+      "Folder": "Lectures/Week 06"
+    },
+    {
+      "Course": "CS-117",
+      "Pattern": "Git_Installation_Guide*",
+      "Folder": "Lectures/Week 06"
+    },
+    {
+      "Course": "CS-123",
+      "Pattern": "Propositional Logic Full Lecture*",
+      "Folder": "Lectures/Week 01"
+    },
+    {
+      "Course": "CS-123",
+      "Pattern": "Knights and Knaves*",
+      "Folder": "Lectures/Week 02"
+    },
+    {
+      "Course": "CS-123",
+      "Pattern": "Rules of Inference for Propositional Logic*",
+      "Folder": "Lectures/Week 04"
+    },
+    {
+      "Course": "CS-123",
+      "Pattern": "Quantifiers Predicate Logic First Order Logic Notes*",
+      "Folder": "Lectures/Week 05"
+    },
+    {
+      "Course": "CS-123",
+      "Pattern": "Methods of Proof*",
+      "Folder": "Lectures/Week 06"
+    },
+    {
+      "Course": "CS-123",
+      "Pattern": "Sqrt2 Irrational*",
+      "Folder": "Lectures/Week 06"
+    },
+    {
+      "Course": "MATH-125",
+      "Pattern": "Matrices and graphs*",
+      "Folder": "Lectures/Week 02"
+    },
+    {
+      "Course": "CS-110",
+      "Pattern": "FoCP_fall*.docx",
+      "Folder": "Course Info"
+    },
+    {
+      "Course": "CS-110",
+      "Pattern": "Daniel-Y-Liang*",
+      "Folder": "Books"
+    },
+    {
+      "Course": "MATH-125",
+      "Pattern": "Discrete Mathematical Structures*",
+      "Folder": "Books"
+    },
+    {
+      "Course": "*",
+      "Pattern": "Rosen Discrete Math *Ed.pdf",
+      "Folder": "Books"
+    }
+  ]
+}

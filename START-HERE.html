@@ -1,0 +1,206 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="description" content="An offline, interactive guide to opening LMS Unpacker, choosing a mode, and organizing course downloads by week.">
+<title>Start here · LMS Unpacker</title>
+<style>
+:root{color-scheme:light;--paper:#f5f4ef;--card:#fff;--ink:#182d2b;--muted:#526661;--line:#d7dfd7;--green:#14634b;--pale:#e5eee5;--gold:#f5cf75;--amber:#fff1cf;--radius:20px}
+*{box-sizing:border-box}html{scroll-behavior:smooth;scroll-padding-top:100px}body{margin:0;background:var(--paper);color:var(--ink);font:17px/1.65 "Segoe UI",Arial,sans-serif}a{color:var(--green);text-underline-offset:4px}button,input,select{font:inherit}button,a,input,summary{touch-action:manipulation}button{cursor:pointer}button:focus-visible,a:focus-visible,input:focus-visible,summary:focus-visible,select:focus-visible{outline:3px solid #a84910;outline-offset:4px}button:disabled{cursor:default;opacity:.5}button{border:1px solid var(--line);border-radius:10px;background:white;color:var(--ink);padding:10px 16px;min-height:44px}button:hover:not(:disabled){border-color:var(--green);background:var(--pale)}[hidden]{display:none!important}.skip{position:fixed;top:-100px;left:12px;background:white;padding:12px;z-index:10}.skip:focus{top:12px}.wrap{width:min(1152px,calc(100% - 48px));margin:auto}header{background:rgba(245,244,239,.97);border-bottom:1px solid var(--line);position:sticky;top:0;z-index:5}.topbar{display:flex;align-items:center;justify-content:space-between;gap:20px;min-height:78px}.brand{font-weight:750;display:flex;align-items:center;gap:12px;text-decoration:none;color:var(--ink);white-space:nowrap}.brand svg{width:36px;height:36px}nav{display:flex;gap:24px;font-size:14px}nav a{color:var(--muted);text-decoration:none}nav a:hover{text-decoration:underline}.eyebrow{font-size:12px;letter-spacing:.16em;text-transform:uppercase;font-weight:750;color:var(--green)}h1,h2,h3,p{margin-top:0}h1{font-size:clamp(40px,5.3vw,67px);letter-spacing:-.055em;line-height:1.08;margin:18px 0 24px;font-weight:720}h2{font-size:clamp(28px,3vw,39px);letter-spacing:-.035em;line-height:1.2;margin-bottom:14px}h3{font-size:20px;letter-spacing:-.015em;line-height:1.35;margin-bottom:10px}.hero{display:grid;grid-template-columns:1.15fr 1fr;gap:64px;align-items:center;padding:70px 0 60px}.intro{font-size:19px;color:var(--muted);max-width:520px}.hero-actions{display:flex;flex-wrap:wrap;gap:12px;margin:28px 0 20px}.button{display:inline-flex;justify-content:center;align-items:center;min-height:46px;padding:11px 20px;border-radius:10px;text-decoration:none;background:var(--green);color:white;font-weight:650}.button:hover{background:#0c4d39}.button.secondary{background:transparent;color:var(--green);border:1px solid var(--line)}.small{font-size:14px;color:var(--muted)}.tag{display:inline-block;font-size:12px;font-weight:700;border-radius:5px;background:var(--pale);color:var(--green);padding:3px 8px;line-height:1.6}.tag.gold{background:var(--gold);color:#4c3706}.file-window{background:#fff;border:1px solid var(--line);border-radius:var(--radius);box-shadow:0 22px 60px #183e2810;overflow:hidden;transform:rotate(1deg)}.window-bar{display:flex;align-items:center;gap:7px;padding:17px 20px;border-bottom:1px solid var(--line);font-size:13px;color:var(--muted)}.dot{width:7px;height:7px;background:#bac7be;border-radius:50%}.window-title{margin-left:8px}.file-list{padding:20px}.file-row{display:flex;align-items:center;gap:12px;padding:13px 12px;margin:5px 0;border-radius:10px;font-size:15px}.file-row.primary{background:var(--pale);border:1px solid #b9d1bd}.file-row.tutorial{background:#faf3df}.file-row .tag{margin-left:auto}.file-icon{width:29px;height:35px;display:grid;place-items:center;background:#edf0ed;border:1px solid #cad5ca;border-radius:4px;font:11px Consolas,monospace;flex-shrink:0}.file-note{padding:6px 12px;font-size:13px;color:var(--muted)}.strip{border:1px solid var(--line);background:var(--pale);padding:18px 24px;border-radius:12px;display:flex;gap:14px;align-items:baseline;font-size:15px}.strip b{white-space:nowrap}.section{padding:68px 0;border-bottom:1px solid var(--line)}.section-head{max-width:690px;margin-bottom:28px}.section-head p{color:var(--muted)}.steps{display:grid;grid-template-columns:repeat(3,1fr);gap:20px}.step{padding:26px;background:white;border:1px solid var(--line);border-radius:var(--radius)}.step-num{display:flex;align-items:center;justify-content:center;width:38px;height:38px;border-radius:50%;background:var(--pale);font-size:14px;font-weight:750;color:var(--green);margin-bottom:22px}.step p{font-size:15px;color:var(--muted);margin-bottom:0}.step strong{color:var(--ink)}kbd{display:inline-block;font:13px/1.4 Consolas,monospace;background:#fff;border:1px solid #b7c6b8;border-bottom-width:3px;border-radius:4px;padding:2px 6px;color:var(--ink)}code{font: .87em Consolas,"Cascadia Code",monospace;overflow-wrap:anywhere}.callout{background:var(--amber);border-left:3px solid #ac7620;padding:15px 20px;margin-top:22px;font-size:15px;border-radius:0 10px 10px 0}.mode-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:12px}.mode{display:block;text-align:left;padding:22px;border-radius:14px;position:relative;min-width:0}.mode[aria-pressed=true]{border:2px solid var(--green);padding:21px;background:var(--pale)}.mode .mode-title{display:block;font-size:19px;font-weight:700;margin-bottom:5px}.mode .mode-detail{display:block;font-size:14px;color:var(--muted)}.mode .number{font:12px Consolas,monospace;color:var(--green);display:block;margin-bottom:14px}.selection{display:flex;flex-wrap:wrap;gap:22px;align-items:center;margin:22px 0;font-size:14px}.selection label{display:flex;align-items:center;gap:9px}input[type=checkbox]{width:19px;height:19px;accent-color:var(--green)}select{max-width:100%;border:1px solid #b1c1b5;border-radius:6px;padding:7px 9px;background:white;color:var(--ink)}.compare{display:grid;grid-template-columns:1fr 1fr;gap:20px;margin-top:22px}.tree-card{border:1px solid var(--line);background:white;border-radius:16px;overflow:hidden;min-width:0}.tree-label{padding:15px 22px;border-bottom:1px solid var(--line);display:flex;align-items:center;justify-content:space-between;gap:12px;font-size:13px;font-weight:650}.tree-label.after{background:var(--pale)}pre{margin:0;white-space:pre-wrap;overflow-wrap:anywhere;font:14px/1.9 Consolas,"Cascadia Code",monospace}.tree{padding:24px;min-height:260px}.explain{font-size:15px;padding:0 24px 24px;color:var(--muted);margin:0}.demo-note{margin:16px 0 0;font-size:14px;color:var(--muted)}.walkthrough{display:grid;grid-template-columns:225px 1fr;gap:26px}.step-nav{display:flex;flex-direction:column;gap:9px;align-items:stretch}.step-nav button{text-align:left;border-color:transparent;background:transparent;font-size:15px}.step-nav button[aria-current=step]{background:var(--pale);border-color:#b9d1bd;font-weight:700;color:var(--green)}.step-nav span{display:inline-grid;place-items:center;width:25px;height:25px;border:1px solid #a1b6a4;border-radius:50%;font-size:12px;margin-right:10px}.lesson{background:white;border:1px solid var(--line);border-radius:var(--radius);padding:30px;min-width:0}.lesson p{color:var(--muted)}.terminal{background:#172e2b;color:#e7f1e8;border:1px solid #0c2622;border-radius:12px;overflow:hidden;margin:24px 0}.terminal-title{font-size:12px;color:#b8d0c1;border-bottom:1px solid #38534b;padding:12px 20px;letter-spacing:.02em}.terminal pre{padding:22px;font-size:14px}.lesson-controls{display:flex;justify-content:space-between;gap:16px;margin-top:22px}.lesson-controls .next{background:var(--green);color:white}.lesson-controls .next:hover{background:#0d503b}.keys{display:flex;flex-wrap:wrap;gap:14px;font-size:13px;margin-top:16px}.sr-only{position:absolute;width:1px;height:1px;padding:0;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap;border:0}.twocol{display:grid;grid-template-columns:1fr 1fr;gap:28px}.panel{background:white;border:1px solid var(--line);border-radius:var(--radius);padding:28px;min-width:0}.panel p,.panel li{font-size:15px;color:var(--muted)}.panel ul,.panel ol{padding-left:22px;margin-bottom:0}.panel li+li{margin-top:10px}.recipe{counter-reset:recipe;list-style:none;padding:0!important}.recipe li{display:flex;align-items:baseline;gap:10px}.recipe li:before{counter-increment:recipe;content:counter(recipe);font-size:12px;color:var(--green);font-weight:750}.recipe code{color:var(--ink);font-size:14px}.mini-table{width:100%;border-collapse:collapse;font-size:14px;text-align:left;margin:18px 0}.mini-table th,.mini-table td{padding:10px;border-bottom:1px solid var(--line);vertical-align:top}.mini-table th{color:var(--muted);font-weight:600}.code-box{border:1px solid var(--line);border-radius:10px;padding:16px;margin:16px 0;background:#f4f6f1}.code-box pre{font-size:12px}.code-box button{margin-top:12px;font-size:13px;padding:7px 12px}.link-row{display:flex;flex-wrap:wrap;gap:20px;font-size:14px;margin-top:20px}details{border-bottom:1px solid var(--line);padding:20px 0}summary{font-weight:650;cursor:pointer;min-height:44px;display:list-item;align-content:center;padding-right:18px}details p{max-width:850px;color:var(--muted);font-size:15px;margin:12px 0 2px}footer{padding:30px 0 45px;font-size:13px;color:var(--muted);display:flex;justify-content:space-between;gap:20px;flex-wrap:wrap}.footer-brand{font-weight:700;color:var(--ink)}.badge{font-size:12px;color:var(--green);font-weight:650}.quick-note{margin-top:22px;font-size:14px;color:var(--muted)}.copy-status{font-size:13px;color:var(--green);min-height:1.5em}
+@media(max-width:850px){.hero{gap:28px;padding:48px 0;grid-template-columns:1fr}.file-window{transform:none;max-width:600px}.steps{gap:12px}.step{padding:20px}.walkthrough{grid-template-columns:1fr}.step-nav{flex-direction:row;flex-wrap:wrap}.step-nav button{padding:8px}.step-nav span{margin-right:6px}.twocol{grid-template-columns:1fr}nav{gap:14px}.strip{display:block}.strip b{display:block;margin-bottom:5px}}
+@media(max-width:580px){.wrap{width:calc(100% - 32px)}.topbar{min-height:68px;flex-wrap:wrap;padding:14px 0;gap:8px}.brand{font-size:15px}.brand svg{width:28px;height:28px}nav{font-size:12px;gap:16px}h1{font-size:43px}.hero{padding:35px 0}.intro{font-size:17px}.section{padding:44px 0}.steps,.mode-grid,.compare{grid-template-columns:1fr}.step{display:block}.step-num{margin-bottom:16px}.mode{padding:16px}.mode[aria-pressed=true]{padding:15px}.mode .number{margin-bottom:5px}.tree{min-height:auto;padding:18px;font-size:12px}.file-row{font-size:13px;padding:12px 8px;gap:8px}.file-row .tag{font-size:10px}.lesson,.panel{padding:20px}.selection{align-items:flex-start;flex-direction:column;gap:14px}.lesson-controls button{font-size:14px}.terminal pre{padding:16px;font-size:12px}.step-nav button{font-size:13px}.step-nav span{width:22px;height:22px}.hero-actions .button{flex:1}.mini-table{font-size:12px}.mini-table td,.mini-table th{padding:8px 5px}}
+@media(prefers-reduced-motion:reduce){html{scroll-behavior:auto}.file-window{transform:none}}
+@media(forced-colors:active){button[aria-pressed=true],button[aria-current=step]{outline:3px solid Highlight}.terminal{border:1px solid CanvasText}}
+@media print{header{position:static}nav,.hero-actions,.lesson-controls,.step-nav,.code-box button{display:none}.wrap{width:100%}.hero,.section{padding:22px 0}.hero{gap:22px}.file-window{box-shadow:none;transform:none}.panel,.step,.tree-card,.lesson{break-inside:avoid}body{background:white;font-size:12pt}.terminal{background:white;color:black}.terminal-title{color:black}.section{border-bottom:1px solid #aaa}a{color:black}}
+</style>
+</head>
+<body>
+<a class="skip" href="#main">Skip to tutorial</a>
+<header><div class="wrap topbar">
+<a href="#main" class="brand"><svg viewBox="0 0 36 36" fill="none" aria-hidden="true"><rect width="36" height="36" rx="10" fill="#14634b"/><path d="M9 13h7l3 3h8v11H9V13Z" stroke="#fff" stroke-width="1.6" stroke-linejoin="round"/><path d="M18 8v12m-4-4 4 4 4-4" stroke="#f5cf75" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>LMS Unpacker <span class="badge">/ field guide</span></a>
+<nav aria-label="Tutorial sections"><a href="#open">Open the app</a><a href="#modes">Try the modes</a><a href="#walk">Walkthrough</a></nav>
+</div></header>
+<main id="main" class="wrap">
+<section class="hero" aria-labelledby="hero-title">
+<div><span class="eyebrow">A visual guide · works offline</span><h1 id="hero-title">Your downloads,<br>easier to find.</h1><p class="intro">From a messy LMS ZIP to a useful course folder. Learn what to open, choose how to unpack, and see exactly where your files will go.</p><div class="hero-actions"><a class="button" href="#open">Start with opening the app <span aria-hidden="true">&nbsp;↗</span></a><a class="button secondary" href="#modes">Explore the modes</a></div><p class="small">This page is a practice guide. The desktop app opens in its own window. A separate CLI edition is available if you prefer a terminal.</p></div>
+<div class="file-window" aria-label="Two independent single-file editions"><div class="window-bar"><i class="dot" aria-hidden="true"></i><i class="dot" aria-hidden="true"></i><i class="dot" aria-hidden="true"></i><span class="window-title">Pick the edition that suits you</span></div><div class="file-list"><div class="file-row primary"><span class="file-icon" aria-hidden="true">APP</span><strong>LMS-Unpacker.exe</strong><span class="tag">DESKTOP</span></div><p class="file-note">Browse or drop files. Review a visual plan. Add it to your Start menu.</p><div class="file-row"><span class="file-icon" aria-hidden="true">&gt;_</span><strong>LMS-Unpacker-CLI.exe</strong><span class="tag">TERMINAL</span></div><p class="file-note">A guided menu or direct commands. Works independently.</p><div class="file-row tutorial"><span class="file-icon" aria-hidden="true">&lt;/&gt;</span><strong>Visual guide included</strong></div><div class="file-note"><strong>One EXE is all you need.</strong> Each edition carries its own supporting files. Keep your course materials wherever you like.</div></div></div>
+</section>
+<div class="strip"><b>The starting defaults</b><span>Flatten files · Skip existing names · Delete ZIPs after success. You can change these before applying.</span></div>
+<noscript><div class="callout">JavaScript is disabled. The opening steps, course recipes and help below still work; interactive examples require JavaScript.</div></noscript>
+<section id="open" class="section" aria-labelledby="open-title"><div class="section-head"><span class="eyebrow">01 / Get going</span><h2 id="open-title">Open the launcher. That’s it.</h2><p>You don’t need a terminal command, an account, or a separate installation.</p></div>
+<div class="steps"><article class="step"><div class="step-num">1</div><h3>Open the desktop app</h3><p>Double-click <strong>LMS-Unpacker.exe</strong>. It can live in Downloads, on your desktop, or anywhere convenient. No supporting files to arrange.</p></article><article class="step"><div class="step-num">2</div><h3>Browse or drop</h3><p>Use <strong>Choose folder</strong> or <strong>Choose ZIP</strong>. Or drag one folder or ZIP into the window. Select the folder containing your courses to process them together.</p></article><article class="step"><div class="step-num">3</div><h3>Preview, then apply</h3><p>Choose a task and click <strong>Preview changes</strong>. Review destinations and matching reasons, then click <strong>Apply changes</strong>. Changing a setting requires a new preview.</p></article></div>
+<div class="twocol" style="margin-top:24px"><article class="panel"><span class="tag">OPEN IT NEXT TIME</span><h3 style="margin-top:14px">One place in your Start menu</h3><p>Click <strong>Add to Start menu</strong> inside the app. It saves its own copy in your user account and creates a shortcut. Then search Start for <strong>LMS Unpacker</strong>. You can remove the original download.</p><p><strong>Remove shortcut</strong> removes the Start entry. To remove the app copy too, close it and delete <code>%LOCALAPPDATA%\Programs\LMS Unpacker</code>. No administrator account is needed.</p></article><article class="panel"><span class="tag">IF DOUBLE-CLICK DOES NOT WORK</span><h3 style="margin-top:14px">A command you can paste</h3><p>In File Explorer, open the folder containing the EXE. Click the address bar, type <code>powershell</code>, and press Enter. Paste:</p><div class="code-box"><pre id="launch-command">&amp; ".\LMS-Unpacker.exe"</pre><button id="copy-launch" type="button">Copy desktop launch command</button><div id="launch-status" class="copy-status" role="status"></div></div><p>For the terminal edition, use <code>.\LMS-Unpacker-CLI.exe --help</code>. See <a href="LAUNCH-HELP.txt">all launch alternatives</a>, including the source BAT.</p></article></div>
+<p class="quick-note">Choose your <strong>materials</strong> folder; there is no need to move it beside the app. The desktop remembers the last successfully processed path. Results stay beside the ZIP or in its course folder.</p>
+<div class="callout"><strong>Know what “skip” means.</strong> If a filename already exists, the incoming version is skipped even when its content differs. The ZIP is then deleted after success. Choose <strong>Customize → Rename</strong> to keep both versions, or enable <strong>Keep ZIP</strong> to retain the archive.</div>
+</section>
+<section id="modes" class="section" aria-labelledby="modes-title"><div class="section-head"><span class="eyebrow">02 / See the difference</span><h2 id="modes-title">One ZIP. Three useful outcomes.</h2><p>Click a mode to see the resulting folders. This simplified example follows the structure of the supplied Week 7 download.</p></div>
+<div class="mode-grid" role="group" aria-label="Example unpacking mode">
+<button class="mode" data-mode="Flatten" aria-pressed="true"><span class="number">MENU 1 · DEFAULT</span><span class="mode-title">Flatten</span><span class="mode-detail">Get the documents out. Remove the extra folders.</span></button>
+<button class="mode" data-mode="Extract" aria-pressed="false"><span class="number">MENU 2</span><span class="mode-title">Just unzip</span><span class="mode-detail">Keep the ZIP’s original folder structure intact.</span></button>
+<button class="mode" data-mode="Organize" aria-pressed="false"><span class="number">MENU 3 OR 4</span><span class="mode-title">Organize</span><span class="mode-detail">Sort by category, week or syllabus topic.</span></button>
+</div>
+<div class="selection"><label><input id="keep-zip" type="checkbox">Keep the source ZIP</label><label id="group-control" hidden>Lecture grouping <select id="group-by"><option value="Week">By week</option><option value="Category">Categories only</option><option value="Topic">By topic</option></select></label><span class="small" id="scope-note">No course profile needed.</span></div>
+<div class="compare"><div class="tree-card"><div class="tree-label"><span>BEFORE · Inside the downloaded ZIP</span><span class="tag">4 DOCUMENTS</span></div><pre class="tree">Quantitative/
+└─ CS-123-download.zip
+   └─ 19 October - 25 October/
+      ├─ Assignment 2/
+      │  └─ Assignment 2.docx
+      ├─ Week7 Lecture19/
+      │  └─ Week7 Lecture19.pptx
+      ├─ Week7 Lecture20/
+      │  └─ Week7 Lecture20.pptx
+      └─ Week7 Lecture21/
+         └─ Week7 Lecture21.pptx</pre></div><div class="tree-card"><div class="tree-label after"><span id="result-label">AFTER · Flatten</span><span class="tag" id="zip-label">ZIP DELETED</span></div><pre class="tree" id="result-tree" aria-live="polite" aria-atomic="true">Quantitative/
+├─ Assignment 2.docx
+├─ Week7 Lecture19.pptx
+├─ Week7 Lecture20.pptx
+└─ Week7 Lecture21.pptx</pre><p class="explain" id="mode-explanation">All four documents land directly beside the ZIP. Best for quick LMS cleanup.</p></div></div>
+<p class="demo-note">Interactive illustration only: this page cannot read, move, extract or delete your files. Filenames are shortened for clarity. The actual launcher defaults to categories; choose weekly grouping if you want it.</p>
+</section>
+<section id="walk" class="section" aria-labelledby="walk-title"><div class="section-head"><span class="eyebrow">03 / Practice the flow</span><h2 id="walk-title">Prefer the CLI? Practice its menu.</h2><p>Run LMS-Unpacker-CLI.exe without arguments for this optional guided menu. The desktop uses labeled controls instead. This walkthrough follows the mode selected above.</p></div>
+<div class="walkthrough"><div class="step-nav" role="group" aria-label="Walkthrough steps"><button data-step="0" aria-current="step"><span>1</span>Choose a path</button><button data-step="1"><span>2</span>Choose a task</button><button data-step="2"><span>3</span>Choose settings</button><button data-step="3"><span>4</span>Read the preview</button><button data-step="4"><span>5</span>Apply or cancel</button></div><article class="lesson"><span class="eyebrow" id="step-count">Step 1 of 5</span><h3 id="lesson-title" tabindex="-1">Tell it where your materials are.</h3><p id="lesson-copy">Paste a ZIP path for one download, or a folder path to handle multiple downloads. For a collection of courses, choose the folder containing your subject folders.</p><div class="terminal"><div class="terminal-title">EXAMPLE APP WINDOW · practice only</div><pre id="terminal-copy">Folder or ZIP path:
+&gt; C:\Courses
+
+Selected: C:\Courses</pre></div><p class="small" id="lesson-tip">The default scan includes this folder and immediate course folders. It does not recursively scan your lab projects.</p><div class="lesson-controls"><button id="previous-step" disabled>← Previous</button><button class="next" id="next-step">Next: choose a task →</button></div><div class="keys"><span><kbd>Enter</kbd> accept a default</span><span><kbd>Q</kbd> quit the app</span><span><kbd>Y</kbd> apply after preview</span></div></article></div>
+<span class="sr-only" id="step-announcement" role="status"></span>
+</section>
+<section id="courses" class="section" aria-labelledby="courses-title"><div class="section-head"><span class="eyebrow">04 / Make it yours</span><h2 id="courses-title">Your courses. Your weeks and topics.</h2><p>Start with general categories. Add a profile when you want course-code routing or syllabus topic rules.</p></div>
+<div class="twocol"><article class="panel"><span class="tag">NUST FALL 2026 EXAMPLE</span><h3 style="margin-top:16px">The Week 7 setup</h3><ol class="recipe"><li><span>Select your <code>COURSES</code> folder.</span></li><li><span>Task: <strong>Organize ZIPs and loose documents</strong>.</span></li><li><span>Keep the default settings, or customize.</span></li><li><span>Course profile: <strong>NUST Fall 2026 example</strong>.</span></li><li><span>Group lectures: <strong>By week, when known</strong>.</span></li><li><span>Preview the destinations, then choose <strong>Apply changes</strong>.</span></li></ol><table class="mini-table"><caption class="sr-only">Examples of NUST course routing</caption><thead><tr><th scope="col">ZIP starts with</th><th scope="col">Course folder</th></tr></thead><tbody><tr><td><code>MATH-125-…</code></td><td>Discrete</td></tr><tr><td><code>CS-123-…</code></td><td>Quantitative</td></tr><tr><td><code>CS-117-…</code></td><td>ICT</td></tr></tbody></table><p><strong>Already extracted everything?</strong> Choose <strong>Organize loose documents only</strong>. The app shows an undo-record path after making moves.</p></article>
+<article class="panel"><span class="tag">ANY UNIVERSITY OR COURSE</span><h3 style="margin-top:16px">Bring your own syllabus</h3><p>Download the sample CSVs using the links below. List your course codes and folder names, then add filename patterns for topics you know belong to a week.</p><table class="mini-table"><caption class="sr-only">Example syllabus matching rules</caption><thead><tr><th scope="col">Course</th><th scope="col">Filename contains</th><th scope="col">Week</th></tr></thead><tbody><tr><td>BIO-101</td><td>cell structure</td><td>01</td></tr><tr><td>BIO-101</td><td>photosynthesis</td><td>02</td></tr></tbody></table><p>Save your edited CSVs anywhere. In the desktop app, choose an Organize task, then <strong>Create a profile from CSV</strong>. Select the CSVs and save a new JSON file. Or use the independent CLI builder:</p><div class="code-box"><pre id="profile-command">.\LMS-Unpacker-CLI.exe --profile</pre><button id="copy-command" type="button">Copy profile command</button><div id="copy-status" class="copy-status" role="status"></div></div><p>The desktop selects your new profile automatically. To reuse one, choose <strong>My JSON profile → Choose profile</strong>. Add optional <code>Topic</code> and <code>Reason</code> columns to give lectures meaningful topic folders and explain each rule. A profile is optional.</p><div class="link-row"><a href="docs/PROFILES.md">Full profile reference</a><a href="profiles/courses.example.csv" download>Course CSV example</a><a href="profiles/syllabus.example.csv" download>Syllabus CSV example</a></div></article></div>
+<div class="callout"><strong>Weeks come from evidence.</strong> A filename like <code>Week7 Lecture19.pptx</code>, an LMS <code>Week 7</code> folder, or your topic rules can supply a week. A date range or a lecture number alone cannot. The app does not automatically read PDF or Word syllabi.</div>
+</section>
+<section id="calculus" class="section" aria-labelledby="calculus-title"><div class="section-head"><span class="eyebrow">No week labels? Still useful.</span><h2 id="calculus-title">Let the syllabus explain the folder.</h2><p>Calculus filenames often describe a topic rather than a week. The optional NUST profile matches those topics to the supplied syllabus. All 42 supplied filenames are covered; books and assignments stay in their own categories.</p></div><label for="calculus-group"><strong>Compare Calculus grouping:</strong></label> <select id="calculus-group"><option value="Week">By syllabus week</option><option value="Topic">By topic</option></select><div class="compare" style="margin-top:20px"><div class="tree-card"><div class="tree-label">BEFORE · No week numbers required</div><pre class="tree">Calculus/
+├─ Composition of Functions.pdf
+├─ Continuity.pdf
+├─ Limits.pdf
+└─ Area between curves.pdf</pre></div><div class="tree-card"><div class="tree-label after">AFTER · <span id="calculus-label">By syllabus week</span></div><pre class="tree" id="calculus-tree" aria-live="polite" aria-atomic="true">Lectures/
+├─ Week 01/Composition of Functions.pdf
+├─ Week 02/Continuity.pdf
+├─ Weeks 02-03/Limits.pdf
+└─ Unscheduled/Area between curves.pdf</pre></div></div><p class="demo-note">Illustration only; filenames are shortened. To use it: select your Calculus folder → Organize loose documents only → NUST Fall 2026 example → By week or By topic → Preview.</p><div class="callout"><strong>A syllabus match is not a verified teaching date.</strong> Broad limits topics span Weeks 02–03. Combined extrema and concavity spans Weeks 04–05. Area between curves has a useful topic folder, but no explicit week in the supplied schedule, so weekly grouping leaves it Unscheduled. Every planned move has a “Why” explanation. Edit the profile if your teaching order differs.</div></section>
+<section id="help" class="section" aria-labelledby="help-title"><div class="section-head"><span class="eyebrow">05 / A few useful answers</span><h2 id="help-title">Before you apply.</h2></div>
+<details><summary>What if I just want an unzipper?</summary><p>Choose <strong>Just unzip</strong> (task 2 in the CLI). The app preserves the ZIP’s internal folders inside a folder named after the ZIP. No course profile or organization is required. This is also the right mode for programming projects and files with links that rely on their folder structure.</p></details>
+<details><summary>What does the preview change?</summary><p>Nothing. It reads archives to check their contents and shows the planned actions. It creates no extracted files, folders or undo logs. In the desktop, click <strong>Apply changes</strong> only after reviewing. In the CLI, answer <strong>Y</strong> to apply, or press Enter to cancel. Existing-document previews avoid reading document contents unless a collision needs comparing.</p></details>
+<details><summary>Will it touch my labs and submissions?</summary><p>It scans loose documents in the selected folder and immediate course folders, not all nested directories. Known working folders such as Lab, submission, templates and evidence are excluded from that one-level scan. If you explicitly select a working folder, you are selecting its contents for processing. Choose Customize → scan 0 for only the selected folder.</p></details>
+<details><summary>Can I undo it?</summary><p>You can undo <strong>existing-file organization</strong> using <strong>Undo organization</strong> in the desktop (task 5 in the CLI) and the JSON record shown after the run. Undo also previews before restoring. The record lives under <code>.lms-unpacker/history</code> in your selected folder. Undo stops if files have changed or their old locations are occupied. It cannot restore deleted ZIPs or reverse extraction or overwrite. ZIP deletion is permanent, not a Recycle Bin operation.</p></details>
+<details><summary>How do I keep different versions of the same filename?</summary><p>Choose Settings → Customize → Conflict choice 2, Rename. Different files become names like <code>Lecture_1.pdf</code>. Identical files at a matching destination are skipped. If you want to keep the source archive too, answer Y to Keep ZIP.</p></details>
+<details><summary>I get an error or “No ZIP files found.”</summary><p>Check the selected path and scan depth. The desktop and CLI EXEs need no supporting files. Use <strong>Organize loose documents only</strong> for already-extracted materials. An extraction error keeps the affected ZIP; some files may already have been written if publishing failed. Close documents that are locked by another application, resolve the reported issue, and try again.</p></details>
+<details><summary>Why does Windows show a script or security message?</summary><p>The launcher runs local PowerShell scripts and the release is unsigned. Use a copy you trust. Managed computers may restrict scripts; follow your institution’s policy. The launcher does not need administrator access and does not permanently change your account’s execution policy. See the README for supported systems and troubleshooting.</p></details>
+<details><summary>Can I use this guide offline and with a keyboard?</summary><p>Yes. This HTML file contains its own styles and interactive examples. It has no fonts, analytics or other network dependencies. Use Tab to move between controls, Enter or Space to activate buttons, and arrow keys in the grouping selector. The app’s menu accepts typed numbers followed by Enter. Browser zoom and reduced-motion preferences are supported.</p></details>
+<p class="quick-note">Ready? Return to <strong>LMS Unpacker</strong> and choose a folder or ZIP. Keep the app open while reading its embedded guide.</p>
+</section>
+</main>
+<footer class="wrap"><span><span class="footer-brand">LMS Unpacker</span> · Offline guide · v1.1.0</span><span><a href="README.md">Full usage guide</a> &nbsp;·&nbsp; <a href="#main">Back to top ↑</a></span></footer>
+<script>
+(() => {
+  'use strict';
+  const byId = id => document.getElementById(id);
+  const modes = [...document.querySelectorAll('[data-mode]')];
+  const steps = [...document.querySelectorAll('[data-step]')];
+  let mode = 'Flatten', step = 0;
+  const files = ['Assignment 2.docx', 'Week7 Lecture19.pptx', 'Week7 Lecture20.pptx', 'Week7 Lecture21.pptx'];
+  function renderExample() {
+    const keep = byId('keep-zip').checked;
+    const weekly = byId('group-by').value === 'Week';
+    const topic = byId('group-by').value === 'Topic';
+    let lines = ['Quantitative/'];
+    if (mode === 'Flatten') {
+      lines.push(...files.map((name, i) => (i === files.length - 1 && !keep ? '└─ ' : '├─ ') + name));
+    } else if (mode === 'Extract') {
+      lines.push((keep ? '├─ ' : '└─ ') + 'CS-123-download/', '   └─ 19 October - 25 October/');
+      files.forEach((name, i) => {
+        const last = i === files.length - 1;
+        lines.push('      ' + (last ? '└─ ' : '├─ ') + name.replace(/\.(docx|pptx)$/, '') + '/');
+        lines.push('      ' + (last ? '   ' : '│  ') + '└─ ' + name);
+      });
+    } else {
+      lines.push('├─ Assignments/', '│  └─ ' + files[0], (keep ? '├─ ' : '└─ ') + 'Lectures/');
+      if (weekly || topic) lines.push('   └─ ' + (weekly ? 'Week 07/' : 'Unsorted topics/'));
+      files.slice(1).forEach((name, i) => lines.push((weekly || topic ? '      ' : '   ') + (i === 2 ? '└─ ' : '├─ ') + name));
+    }
+    if (keep) lines.push('└─ CS-123-download.zip');
+    byId('result-tree').textContent = lines.join('\n');
+    byId('result-label').textContent = 'AFTER · ' + ({Flatten:'Flatten', Extract:'Just unzip', Organize:weekly?'Organize by week':topic?'Organize by topic':'Organize by category'})[mode];
+    byId('zip-label').textContent = keep ? 'ZIP KEPT' : 'ZIP DELETED';
+    byId('group-control').hidden = mode !== 'Organize';
+    byId('scope-note').textContent = mode === 'Organize' ? 'Week labels work without a profile. Topic rules are optional.' : 'No course profile needed.';
+    byId('mode-explanation').textContent = {
+      Flatten:'All four documents land directly beside the ZIP. Best for quick LMS cleanup.',
+      Extract:'Every original folder stays in place inside a new folder named after the ZIP. Useful when structure matters.',
+      Organize:topic?'These lecture filenames name a week but no topic rule. They stay together in Unsorted topics. See the Calculus example for named topics.':weekly?'The three Week 7 lectures share a weekly folder. Assignment 2 stays in Assignments.':'Lectures share one category folder. Assignment 2 stays in Assignments; no weekly subfolders are added.'
+    }[mode];
+    renderLesson(false);
+  }
+  function renderLesson(announce) {
+    const selected = {Flatten:'1', Extract:'2', Organize:'3'}[mode];
+    const keep = byId('keep-zip').checked;
+    const weekly = byId('group-by').value === 'Week';
+    const topic = byId('group-by').value === 'Topic';
+    const destinations = mode === 'Flatten' ? 'Quantitative/Week7 Lecture19.pptx' : mode === 'Extract' ? 'Quantitative/CS-123-download/19 October - 25 October/…' : 'Quantitative/Lectures/' + (weekly ? 'Week 07/' : topic ? 'Unsorted topics/' : '') + 'Week7 Lecture19.pptx';
+    const lessons = [
+      ['Tell it where your materials are.', 'Paste a ZIP path for one download, or a folder path to handle multiple downloads. For a collection of courses, choose the folder containing your subject folders.', 'Folder or ZIP path:\n> C:\\Courses\n\nSelected: C:\\Courses', 'The default scan includes this folder and immediate course folders. It does not recursively scan your lab projects.'],
+      ['Choose the job you want.', 'Your selected example uses ' + (mode === 'Extract' ? 'Just unzip' : mode) + '. Task 3 includes loose documents as well as ZIPs when you select a folder. Task 4 only organizes existing documents.', '1. Flatten ZIP downloads\n2. Just unzip\n3. Organize ZIPs and loose documents\n4. Organize loose documents only\n5. Undo a previous organization\n\nTask [1]: ' + selected, 'The number is the choice: type it, then press Enter. Change modes in the example above to compare another workflow.'],
+      ['Keep the defaults, or make a small change.', keep ? 'To keep your archive, select Customize and answer Y to Keep ZIP. Rename is also available there if you want to keep different versions of an existing filename.' : 'Use defaults for the quickest route: skip existing names and delete ZIPs after success. Customize lets you change scan depth, rename conflicts, and retain archives.',
+        (keep ? 'Settings: 2 (Customize)\nScan: 1\nConflicts: 1 (Skip)\nKeep ZIP? Y' : 'Settings: 1 (Use defaults)\n\nConflicts: Skip\nKeep ZIP: False') + (mode === 'Organize' ? '\n\nProfile: 2 (NUST example)\nGroup lectures: ' + (weekly ? '2 (By week)' : topic ? '3 (By topic)' : '1 (Categories only)') : ''), mode === 'Organize' ? 'Choose profile 1 for general use, 2 for the supplied NUST mapping, or 3 for your own JSON profile.' : 'No profile or syllabus is needed for this mode.'],
+      ['Check the destinations before anything moves.', 'The preview lists each planned write, skip, move and ZIP deletion. Check that the folder names and conflict choices are what you intended.', 'PREVIEW: no files will be changed.\n\n[Write] ' + destinations + '\n[Write] …3 more documents\n[' + (keep ? 'Keep ZIP' : 'Delete ZIP') + '] CS-123-download.zip\n\nSummary: 1 ZIP, 4 files written, 0 errors.', 'In preview, “written” and “Delete ZIP” describe planned actions. If the preview reports errors, the launcher will stop before applying.'],
+      ['Apply with Y. Cancel with Enter.', 'When the plan looks right, type Y to run it. If you are unsure, type N or press Enter to cancel. After a successful run, open the selected folder in File Explorer.', 'Apply the displayed changes? Y=yes, N=cancel [n]:\n\nY + Enter  → apply\nN + Enter  → cancel\nEnter      → cancel\n\nNo action is performed by this tutorial.', 'Existing-file organization prints an undo record. Keep that record if you want to restore the original file locations later.']
+    ];
+    const lesson = lessons[step];
+    byId('step-count').textContent = 'Step ' + (step + 1) + ' of 5';
+    byId('lesson-title').textContent = lesson[0];
+    byId('lesson-copy').textContent = lesson[1];
+    byId('terminal-copy').textContent = lesson[2];
+    byId('lesson-tip').textContent = lesson[3];
+    steps.forEach((button, i) => { if (i === step) button.setAttribute('aria-current','step'); else button.removeAttribute('aria-current'); });
+    byId('previous-step').disabled = step === 0;
+    byId('next-step').textContent = ['Next: choose a task →','Next: settings →','Next: preview →','Next: apply or cancel →','Start again ↺'][step];
+    if (announce) byId('step-announcement').textContent = 'Step ' + (step + 1) + ': ' + lesson[0];
+  }
+  modes.forEach(button => button.addEventListener('click', () => {
+    mode = button.dataset.mode;
+    modes.forEach(other => other.setAttribute('aria-pressed',String(other === button)));
+    renderExample();
+  }));
+  byId('keep-zip').addEventListener('change',renderExample);
+  byId('group-by').addEventListener('change',renderExample);
+  steps.forEach(button => button.addEventListener('click',() => { step = Number(button.dataset.step); renderLesson(true); }));
+  byId('previous-step').addEventListener('click',() => { if (step > 0) step--; renderLesson(true); byId('lesson-title').focus({preventScroll:true}); });
+  byId('next-step').addEventListener('click',() => { step = (step + 1) % 5; renderLesson(true); byId('lesson-title').focus({preventScroll:true}); });
+  byId('copy-command').addEventListener('click',async () => {
+    const text = byId('profile-command').textContent;
+    try {
+      if (!navigator.clipboard) throw new Error('Clipboard unavailable');
+      await navigator.clipboard.writeText(text);
+      byId('copy-status').textContent = 'Copied. Paste into PowerShell in the app folder.';
+    } catch (_) {
+      const selection = window.getSelection();
+      const range = document.createRange();
+      range.selectNodeContents(byId('profile-command'));
+      selection.removeAllRanges(); selection.addRange(range);
+      byId('copy-status').textContent = 'Command selected. Press Ctrl+C to copy.';
+    }
+  });
+  byId('calculus-group').addEventListener('change', () => {
+    const topic = byId('calculus-group').value === 'Topic';
+    byId('calculus-label').textContent = topic ? 'By topic' : 'By syllabus week';
+    byId('calculus-tree').textContent = topic
+      ? 'Lectures/\n├─ Functions/Composition of Functions.pdf\n├─ Limits and continuity/Continuity.pdf\n├─ Limits and continuity/Limits.pdf\n└─ Areas between curves/Area between curves.pdf'
+      : 'Lectures/\n├─ Week 01/Composition of Functions.pdf\n├─ Week 02/Continuity.pdf\n├─ Weeks 02-03/Limits.pdf\n└─ Unscheduled/Area between curves.pdf';
+  });
+  byId('copy-launch').addEventListener('click', async () => {
+    try {
+      if (!navigator.clipboard) throw new Error('Clipboard unavailable');
+      await navigator.clipboard.writeText(byId('launch-command').textContent);
+      byId('launch-status').textContent = 'Copied. Paste into PowerShell beside the EXE.';
+    } catch (_) {
+      const range = document.createRange(); range.selectNodeContents(byId('launch-command'));
+      const selection = window.getSelection(); selection.removeAllRanges(); selection.addRange(range);
+      byId('launch-status').textContent = 'Command selected. Press Ctrl+C to copy.';
+    }
+  });
+  renderExample();
+})();
+</script>
+</body>
+</html>

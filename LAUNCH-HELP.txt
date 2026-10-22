@@ -1,0 +1,69 @@
+LMS UNPACKER - OPENING THE APP
+
+DESKTOP: Keep just LMS-Unpacker.exe. Double-click it, then choose a folder or ZIP,
+or drag one onto the window. Preview changes, review the plan, then Apply changes.
+Click Add to Start menu if you want a permanent shortcut and a saved app copy.
+The Visual guide button opens the embedded offline HTML tutorial.
+
+CLI: Keep just LMS-Unpacker-CLI.exe. It works without the desktop edition.
+Run it in a terminal without arguments for a guided menu, or use named options.
+
+Neither EXE requires you to arrange supporting files. Both contain their own runtime
+scripts and use Windows PowerShell 5.1. They require no administrator rights.
+Do not move your course materials beside the program; select them where they are.
+
+IF DOUBLE-CLICK DOES NOT WORK
+
+Open the folder containing your EXE in File Explorer. Click the address bar,
+type powershell, and press Enter. Paste the command for your edition:
+
+& ".\LMS-Unpacker.exe"
+
+.\LMS-Unpacker-CLI.exe --help
+
+To open the desktop app from elsewhere, replace this path with its actual location:
+
+& "C:\Tools\LMS-Unpacker.exe"
+
+CLI EXAMPLES (from the folder containing the CLI EXE)
+
+.\LMS-Unpacker-CLI.exe --menu "C:\Courses"
+.\LMS-Unpacker-CLI.exe -Path "C:\Downloads\materials.zip" -Mode Extract -DryRun
+.\LMS-Unpacker-CLI.exe -Path "C:\Courses\Calculus" -Mode Organize -ExistingOnly -GroupBy Topic -RulesPath NUST -DryRun
+.\LMS-Unpacker-CLI.exe --tutorial
+
+Named CLI options run directly. Remove -DryRun after reviewing the preview to apply.
+Defaults skip existing names and permanently delete successful ZIPs, including skips.
+Use -KeepZip to retain archives; use -Conflict Rename to keep differing versions.
+
+OPTIONAL SOURCE BAT / PS1 USERS
+
+If you chose the modular ZIP instead of an EXE, extract the whole ZIP first.
+Open its LMS-Unpacker folder, then double-click Run-Unpack.bat.
+If BAT files open in an editor, open PowerShell in that folder and paste:
+
+cmd.exe /d /c ".\Run-Unpack.bat"
+
+Or launch the source menu or desktop directly:
+
+powershell.exe -NoProfile -ExecutionPolicy Bypass -File ".\Start-Unpacker.ps1"
+powershell.exe -NoProfile -STA -ExecutionPolicy Bypass -File ".\Start-Desktop.ps1"
+
+Only this optional source package needs its supporting files kept together.
+
+TROUBLESHOOTING
+
+- File not found: open PowerShell in the folder containing your EXE.
+- A path contains spaces: keep the quotes shown above. PowerShell needs & before
+  a quoted executable path.
+- This release is unsigned. Windows or institutional policy may ask about or block
+  a new application. Use a trusted copy and follow your institution's policy.
+- Organization-enforced script policy can override process settings. Contact IT;
+  do not disable security protections or change machine policy to work around it.
+- The app starts without admin and does not permanently change execution policy.
+- Updating the Start menu copy fails: close the old installed app and retry from
+  the new download. The old copy is preserved if replacement fails.
+- Remove shortcut removes only the Start entry. To remove the saved app copy,
+  close it and delete %LOCALAPPDATA%\Programs\LMS Unpacker.
+- A forced process kill may leave lms-unpacker-* files in your temporary folder.
+  Normal exit removes the embedded runtime. Keep the app open while reading help.
