@@ -29,6 +29,7 @@ param(
     [switch]$OrganizeExisting,
     [switch]$ExistingOnly,
     [string]$RulesPath,
+    [string]$OutputPath,
     [ValidateRange(1,100000)][int]$MaxEntries = 10000,
     [ValidateRange(1,100)][int]$MaxExpandedGB = 2,
     [switch]$SkipExisting,
@@ -47,7 +48,7 @@ try {
     $options = @{
         Path=$Path; Mode=$Mode; GroupBy=$GroupBy; Depth=$Depth; Conflict=$Conflict; KeepZip=[bool]$KeepZip
         Preview=([bool]$DryRun -or [bool]$WhatIfPreference); OrganizeExisting=[bool]$OrganizeExisting
-        ExistingOnly=[bool]$ExistingOnly; RulesPath=$RulesPath; MaxEntries=$MaxEntries
+        ExistingOnly=[bool]$ExistingOnly; RulesPath=$RulesPath; OutputPath=$OutputPath; MaxEntries=$MaxEntries
         MaxExpandedBytes=([long]$MaxExpandedGB * 1GB)
     }
     if (-not $options.Preview -and -not $PSCmdlet.ShouldProcess($Path, "Run $Mode (conflicts: $Conflict; keep ZIP: $KeepZip)")) { return }

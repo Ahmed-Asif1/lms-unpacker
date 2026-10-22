@@ -1,0 +1,85 @@
+name: Verified release builds
+on:
+  push:
+    tags: ['v*']
+  workflow_dispatch:
+permissions:
+  contents: read
+concurrency:
+  group: release-${{ github.ref }}
+  cancel-in-progress: false
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - name: Require a version tag matching the source
+        env:
+          RELEASE_REF: ${{ github.ref }}
+        run: |
+          version=$(tr -d '\r\n' < VERSION)
+          test "$RELEASE_REF" = "refs/tags/v$version"
+  checks:
+    needs: validate
+    uses: ./.github/workflows/test.yml
+    permissions:
+      contents: read
+  build:
+    needs: checks
+    runs-on: windows-latest
+    permissions:
+      contents: read
+      id-token: write
+      attestations: write
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - name: Build tested release artifacts
+        shell: pwsh
+        run: |
+          ./Build-Release.ps1 -PackageOnly
+          ./Build-Linux.ps1
+      - name: Attest final downloadable binaries
+        uses: actions/attest@1e69f48acb82d1966a394da916b4c1698aa569d6 # v4
+        with:
+          subject-path: |
+            dist/*.exe
+            dist/*.zip
+            dist/*.sh
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: verified-release
+          path: dist/*
+          if-no-files-found: error
+  draft:
+    needs: build
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      attestations: read
+    steps:
+      - uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8
+        with:
+          name: verified-release
+          path: dist
+      - name: Verify provenance and prepare a draft release
+        env:
+          GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}
+          RELEASE_TAG: ${{ github.ref_name }}
+        run: |
+          for artifact in dist/*.exe dist/*.zip dist/*.sh; do
+            gh attestation verify "$artifact" --repo "$GH_REPO"
+          done
+          cd dist
+          sha256sum -c ./*.sha256
+          cd ..
+          cat > notes.md <<'NOTES'
+          Download LMS-Unpacker.exe for the Windows desktop app, LMS-Unpacker-CLI.exe for the independent Windows CLI, or LMS-Unpacker-CLI.sh for Linux (requires PowerShell 7).
+
+          Defaults skip existing filenames and permanently delete ZIPs after successful processing, including skips. Preview first; choose Keep ZIP to retain archives.
+
+          These artifacts were built and tested in GitHub Actions. Check the SHA-256 sidecars and verify provenance with `gh attestation verify <download> --repo Ahmed-Asif1/lms-unpacker`.
+
+          Windows artifacts are currently unsigned with Authenticode. Build attestations verify origin; they are not an antivirus or Windows trust certification. See docs/SIGNING.md in the repository for the code signing policy.
+          NOTES
+          gh release create "$RELEASE_TAG" --verify-tag --draft --title "LMS Unpacker $RELEASE_TAG" --notes-file notes.md dist/*

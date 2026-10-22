@@ -30,12 +30,22 @@
         <TextBox Grid.Row="1" x:Name="InputPath" AutomationProperties.Name="Selected folder or ZIP path" ToolTip="Drop one folder or ZIP anywhere in this window, use Browse, or paste a path."/>
         <Button Grid.Row="1" Grid.Column="1" x:Name="FolderButton" Content="Choose _folder…" Margin="10,0,8,0"/>
         <Button Grid.Row="1" Grid.Column="2" x:Name="ZipButton" Content="Choose _ZIP…" Margin="0"/>
-        <TextBlock Grid.Row="2" Grid.ColumnSpan="3" Text="Drop a folder or ZIP anywhere here. Results stay beside the ZIP or inside its course folder." Margin="0,8,0,0" TextWrapping="Wrap"/>
+        <TextBlock Grid.Row="2" Grid.ColumnSpan="3" Text="Drop folders or ZIPs here. Multiple selections form a queue. Preview the whole queue before applying." Margin="0,8,0,0" TextWrapping="Wrap"/>
       </Grid>
     </Border>
     <Grid Grid.Row="2"><Grid.ColumnDefinitions><ColumnDefinition Width="310"/><ColumnDefinition Width="18"/><ColumnDefinition Width="*"/></Grid.ColumnDefinitions>
       <ScrollViewer VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled">
         <StackPanel x:Name="SettingsPanel" Margin="0,0,10,8">
+          <Expander x:Name="QueueExpander" Header="Saved workspaces and queue" Margin="0,0,0,12">
+            <StackPanel>
+              <ComboBox x:Name="WorkspaceChoice" DisplayMemberPath="Name" AutomationProperties.Name="Saved workspaces" Margin="0,8,0,0"/>
+              <TextBox x:Name="WorkspaceName" AutomationProperties.Name="New workspace name" ToolTip="Name for the current paths, queue and settings" Margin="0,6,0,0"/>
+              <WrapPanel Margin="0,6,0,8"><Button x:Name="SaveWorkspaceButton" Content="Save workspace"/><Button x:Name="RemoveWorkspaceButton" Content="Remove"/></WrapPanel>
+              <TextBlock Text="Additional queued paths"/>
+              <ListBox x:Name="QueueList" Height="90" AutomationProperties.Name="Additional queued folders and ZIPs"/>
+              <WrapPanel Margin="0,6,0,8"><Button x:Name="QueueAddButton" Content="Add current path"/><Button x:Name="QueueClearButton" Content="Clear queue"/></WrapPanel>
+            </StackPanel>
+          </Expander>
           <TextBlock Text="1  Choose what to do" FontSize="19" FontWeight="SemiBold"/>
           <Label Content="_Task" Target="{Binding ElementName=TaskChoice}" Style="{StaticResource FieldLabel}"/>
           <ComboBox x:Name="TaskChoice" SelectedIndex="0" AutomationProperties.Name="Task">
@@ -46,7 +56,8 @@
             <Label Content="_Course profile" Target="{Binding ElementName=ProfileChoice}" Style="{StaticResource FieldLabel}"/>
             <ComboBox x:Name="ProfileChoice" SelectedIndex="0" AutomationProperties.Name="Course profile"><ComboBoxItem Content="General — any courses"/><ComboBoxItem Content="NUST Fall 2026 example"/><ComboBoxItem Content="My JSON profile"/></ComboBox>
             <StackPanel x:Name="CustomProfilePanel" Visibility="Collapsed" Margin="0,8,0,0"><TextBox x:Name="ProfilePath" AutomationProperties.Name="Custom JSON profile path"/><Button x:Name="ProfileBrowseButton" Content="Choose profile…" Margin="0,5,0,0"/></StackPanel>
-            <Button x:Name="CreateProfileButton" Content="Create a profile from CSV…" Margin="0,8,0,0"/>
+            <Button x:Name="EditProfileButton" Content="Edit courses and syllabus…" Margin="0,8,0,0"/>
+            <Button x:Name="CreateProfileButton" Content="Import profile from CSV…" Margin="0,8,0,0"/>
             <Label Content="_Group lectures" Target="{Binding ElementName=GroupChoice}" Style="{StaticResource FieldLabel}"/>
             <ComboBox x:Name="GroupChoice" SelectedIndex="0" AutomationProperties.Name="Lecture grouping"><ComboBoxItem Content="Categories only"/><ComboBoxItem Content="By week, when known"/><ComboBoxItem Content="By topic"/></ComboBox>
             <TextBlock x:Name="GroupHint" TextWrapping="Wrap" Margin="0,8,0,0"/>
@@ -56,11 +67,15 @@
           <CheckBox x:Name="KeepZip" Content="_Keep ZIP after success" AutomationProperties.Name="Keep ZIP after success; unchecked means delete"/>
           <CheckBox x:Name="ScanChildren" Content="Include immediate course folders" IsChecked="True"/>
           <TextBlock x:Name="DefaultsNotice" TextWrapping="Wrap" Margin="0,4,0,14"/>
+          <Label Content="ZIP _output folder (optional)" Target="{Binding ElementName=OutputPath}" Style="{StaticResource FieldLabel}"/>
+          <TextBox x:Name="OutputPath" AutomationProperties.Name="ZIP output folder; blank means beside the archive"/>
+          <Button x:Name="OutputBrowseButton" Content="Choose output folder…" Margin="0,6,0,0"/>
+          <TextBlock Text="Blank keeps the current location. Loose documents are organized in place, with undo." TextWrapping="Wrap" Margin="0,6,0,0"/>
         </StackPanel>
       </ScrollViewer>
       <Grid Grid.Column="2"><Grid.RowDefinitions><RowDefinition Height="Auto"/><RowDefinition Height="Auto"/><RowDefinition Height="*"/><RowDefinition Height="Auto"/></Grid.RowDefinitions>
-        <DockPanel><Button x:Name="UndoButton" Content="_Undo organization…" DockPanel.Dock="Right" Margin="8,0,0,0"/><TextBlock Text="2  Review the plan" FontSize="19" FontWeight="SemiBold" VerticalAlignment="Center"/></DockPanel>
-        <TextBlock Grid.Row="1" x:Name="SummaryText" Text="Choose your materials, then preview. Nothing changes until you apply." TextWrapping="Wrap" Margin="0,10,0,12" AutomationProperties.LiveSetting="Polite"/>
+        <DockPanel><Button x:Name="UndoButton" Content="_Undo organization…" DockPanel.Dock="Right" Margin="8,0,0,0"/><Button x:Name="ClassifyButton" Content="Add rule for selected file…" DockPanel.Dock="Right"/><TextBlock Text="2  Review" FontSize="19" FontWeight="SemiBold" VerticalAlignment="Center"/></DockPanel>
+        <StackPanel Grid.Row="1"><TextBlock x:Name="SummaryText" Text="Choose your materials, then preview. Nothing changes until you apply." TextWrapping="Wrap" Margin="0,10,0,4" AutomationProperties.LiveSetting="Polite"/><CheckBox x:Name="UnclassifiedOnly" Content="Show only unclassified files" Margin="0,4,0,8"/></StackPanel>
         <TabControl Grid.Row="2" x:Name="ResultsTabs" AutomationProperties.Name="Preview and activity">
           <TabItem Header="_File destinations"><DataGrid x:Name="PlanGrid" AutoGenerateColumns="False" IsReadOnly="True" CanUserAddRows="False" CanUserDeleteRows="False" SelectionMode="Extended" EnableRowVirtualization="True" GridLinesVisibility="Horizontal" HeadersVisibility="Column" AutomationProperties.Name="Planned file destinations and reasons">
             <DataGrid.RowStyle><Style TargetType="DataGridRow"><Setter Property="ToolTip" Value="{Binding FullDestination}"/></Style></DataGrid.RowStyle>
@@ -72,9 +87,9 @@
       </Grid>
     </Grid>
     <Grid Grid.Row="3" Margin="0,16,0,0"><Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="Auto"/><ColumnDefinition Width="Auto"/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions>
-      <StackPanel VerticalAlignment="Center" Margin="0,0,14,0"><TextBlock x:Name="StatusText" Text="Ready • Preview first" TextWrapping="Wrap" AutomationProperties.LiveSetting="Polite"/><ProgressBar x:Name="BusyProgress" IsIndeterminate="True" Height="4" Margin="0,7,0,0" Visibility="Collapsed" AutomationProperties.Name="Working"/></StackPanel>
+      <StackPanel VerticalAlignment="Center" Margin="0,0,14,0"><TextBlock x:Name="StatusText" Text="Ready • Preview first" TextWrapping="Wrap" AutomationProperties.LiveSetting="Polite"/><ProgressBar x:Name="BusyProgress" IsIndeterminate="False" Maximum="100" Height="4" Margin="0,7,0,0" Visibility="Collapsed" AutomationProperties.Name="Current operation progress"/></StackPanel>
       <Button Grid.Column="1" x:Name="OpenFolderButton" Content="Open selected folder" IsEnabled="False"/>
-      <Button Grid.Column="2" x:Name="PreviewButton" Content="_Preview changes" FontWeight="SemiBold"/>
+      <StackPanel Grid.Column="2" Orientation="Horizontal"><Button x:Name="CancelButton" Content="_Cancel safely" Visibility="Collapsed"/><Button x:Name="PreviewButton" Content="_Preview changes" FontWeight="SemiBold"/></StackPanel>
       <Button Grid.Column="3" x:Name="ApplyButton" Content="_Apply changes" FontWeight="SemiBold" IsEnabled="False" Padding="22,10" Margin="0"/>
     </Grid>
   </Grid>

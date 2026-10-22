@@ -1,0 +1,4 @@
+*.sh text eol=lf
+*.ps1 text
+*.psm1 text
+*.yml text eol=lf

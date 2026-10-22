@@ -1,7 +1,8 @@
 #requires -Version 5.1
+param([Parameter(ValueFromRemainingArguments=$true)][string[]]$LaunchArguments)
 $ErrorActionPreference = 'Stop'
 try {
-    $arguments = @()
+    $arguments = @($LaunchArguments | Where-Object { $null -ne $_ })
     if ($env:LMS_ARGUMENTS) { [string[]]$arguments = ([Text.Encoding]::UTF8.GetString([Convert]::FromBase64String($env:LMS_ARGUMENTS)) | ConvertFrom-Json) }
     if ($arguments.Count -eq 0 -or $arguments[0] -eq '--menu') {
         if ($arguments.Count -gt 2) { throw 'Use --menu with at most one folder or ZIP path.' }
@@ -26,9 +27,11 @@ Use -KeepZip to retain ZIPs, or -Conflict Rename to keep different versions.
 Named options run directly. Review with -DryRun first; remove it to apply.
 -Mode Flatten|Extract|Organize   -GroupBy Category|Week|Topic   -Depth 0|1
 -Conflict Skip|Rename|Overwrite -RulesPath NUST|<JSON path>    -KeepZip
+-OutputPath <folder>            ZIP output only; loose files stay in place
 -OrganizeExisting  -ExistingOnly  -DryRun / -WhatIf  -MaxEntries N  -MaxExpandedGB N
 Only existing-file organization can be undone. ZIP deletion is permanent.
 From PowerShell, prefix a quoted executable path with &. No separate files are needed.
+Linux: bash LMS-Unpacker-CLI.sh -Path "$HOME/Courses" -DryRun (requires pwsh 7).
 '@
         exit 0
     }
@@ -51,7 +54,7 @@ From PowerShell, prefix a quoted executable path with &. No separate files are n
         exit 0
     }
     $switches = @('KeepZip','DryRun','WhatIf','OrganizeExisting','ExistingOnly','SkipExisting','Overwrite','PassThru')
-    $values = @('Path','Mode','GroupBy','Depth','Conflict','RulesPath','MaxEntries','MaxExpandedGB')
+    $values = @('Path','Mode','GroupBy','Depth','Conflict','RulesPath','OutputPath','MaxEntries','MaxExpandedGB')
     $options = @{}
     for ($index = 0; $index -lt $arguments.Count; $index++) {
         $name = [string]$arguments[$index]

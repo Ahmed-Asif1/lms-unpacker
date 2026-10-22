@@ -12,11 +12,13 @@ try {
     foreach ($name in @('HelpButton','StartMenuButton','RemoveShortcutButton','PathPanel','InputPath','FolderButton','ZipButton',
         'SettingsPanel','TaskChoice','TaskHint','OrganizationPanel','ProfileChoice','CustomProfilePanel','ProfilePath','ProfileBrowseButton',
         'CreateProfileButton','GroupChoice','GroupHint','ConflictChoice','KeepZip','ScanChildren','DefaultsNotice','PreviewButton','UndoButton',
-        'SummaryText','ResultsTabs','PlanGrid','ActivityText','JournalText','StatusText','BusyProgress','OpenFolderButton','ApplyButton')) {
+        'SummaryText','ResultsTabs','PlanGrid','ActivityText','JournalText','StatusText','BusyProgress','OpenFolderButton','ApplyButton',
+        'WorkspaceChoice','WorkspaceName','SaveWorkspaceButton','RemoveWorkspaceButton','QueueList','QueueAddButton','QueueClearButton',
+        'EditProfileButton','ClassifyButton','OutputPath','OutputBrowseButton','CancelButton','UnclassifiedOnly','QueueExpander')) {
         $ui[$name] = $window.FindName($name)
         if (-not $ui[$name]) { throw "Missing interface control: $name" }
     }
-    $state = @{ Busy=$false; Preview=$null; Operation=$null; Worker=$null; Handle=$null; InformationIndex=0; UndoPath=$null }
+    $state = @{ Busy=$false; Preview=$null; Operation=$null; Worker=$null; Handle=$null; InformationIndex=0; UndoPath=$null; Workspaces=@() }
     $preferences = Join-Path ([Environment]::GetFolderPath('LocalApplicationData')) 'LMS Unpacker\preferences.json'
     $shortcut = Join-Path ([Environment]::GetFolderPath('Programs')) 'LMS Unpacker.lnk'
     $appExe = $env:LMS_APP_EXE
@@ -36,10 +38,13 @@ try {
         $null = [Windows.MessageBox]::Show($window,$Message,'LMS Unpacker','OK','Warning')
     }
     function Update-Hints {
+        $ui.QueueExpander.Header = 'Saved workspaces and queue (' + $ui.QueueList.Items.Count + ' additional)'
         $organize = $ui.TaskChoice.SelectedIndex -ge 2
         $ui.OrganizationPanel.Visibility = if ($organize) { 'Visible' } else { 'Collapsed' }
         $ui.CustomProfilePanel.Visibility = if ($ui.ProfileChoice.SelectedIndex -eq 2) { 'Visible' } else { 'Collapsed' }
         $ui.KeepZip.IsEnabled = $ui.TaskChoice.SelectedIndex -ne 3
+        $ui.OutputPath.IsEnabled = $ui.TaskChoice.SelectedIndex -ne 3
+        $ui.OutputBrowseButton.IsEnabled = $ui.TaskChoice.SelectedIndex -ne 3
         $ui.TaskHint.Text = @('Remove LMS wrapper folders. Files land directly beside each ZIP.',
             'Keep every internal folder inside a folder named after the ZIP. Best for projects and linked files.',
             'Sort ZIP contents and loose course documents into useful folders. Working subfolders are not scanned recursively.',
@@ -77,6 +82,7 @@ try {
         } } else { $null }
         return @{
             Path=$item.FullName; Mode=@('Flatten','Extract','Organize','Organize')[$ui.TaskChoice.SelectedIndex]
+            QueuePaths=@($ui.QueueList.Items); OutputPath=$(if ($ui.TaskChoice.SelectedIndex -ne 3) { $ui.OutputPath.Text.Trim().Trim('"') } else { '' })
             GroupBy=@('Category','Week','Topic')[$ui.GroupChoice.SelectedIndex]; Depth=[int][bool]$ui.ScanChildren.IsChecked
             Conflict=@('Skip','Rename')[$ui.ConflictChoice.SelectedIndex]; KeepZip=[bool]$ui.KeepZip.IsChecked; RulesPath=$rules
             OrganizeExisting=($ui.TaskChoice.SelectedIndex -eq 2 -and $item.PSIsContainer); ExistingOnly=($ui.TaskChoice.SelectedIndex -eq 3)
@@ -86,7 +92,9 @@ try {
         $state.Busy = $Busy
         $ui.PathPanel.IsEnabled = -not $Busy
         $ui.SettingsPanel.IsEnabled = -not $Busy
-        foreach ($name in @('UndoButton','StartMenuButton','RemoveShortcutButton')) { $ui[$name].IsEnabled = -not $Busy }
+        foreach ($name in @('UndoButton','StartMenuButton','RemoveShortcutButton','ClassifyButton','PreviewButton')) { $ui[$name].IsEnabled = -not $Busy }
+        $ui.CancelButton.Visibility = if ($Busy -and $state.Operation -notlike 'Undo*') { 'Visible' } else { 'Collapsed' }
+        $ui.CancelButton.IsEnabled = $true
         $ui.ApplyButton.IsEnabled = $false
         $ui.BusyProgress.Visibility = if ($Busy) { 'Visible' } else { 'Collapsed' }
     }
@@ -95,7 +103,7 @@ try {
             $null = [IO.Directory]::CreateDirectory([IO.Path]::GetDirectoryName($preferences))
             $remember = $ui.InputPath.Text.Trim().Trim('"')
             if (-not [IO.Directory]::Exists($remember)) { $remember = [IO.Path]::GetDirectoryName($remember) }
-            [IO.File]::WriteAllText($preferences,(@{Path=$remember} | ConvertTo-Json),[Text.UTF8Encoding]::new($false))
+            [IO.File]::WriteAllText($preferences,(@{Path=$remember; Workspaces=@($state.Workspaces)} | ConvertTo-Json -Depth 8),[Text.UTF8Encoding]::new($false))
         } catch { $ui.ActivityText.AppendText("Could not remember the last path: $($_.Exception.Message)`r`n") }
     }
     function Start-Work([string]$Operation, [hashtable]$Options, [string]$UndoPath) {
@@ -106,27 +114,67 @@ try {
             $state.DisplayRoot = if ($selectedItem.PSIsContainer) { $selectedItem.FullName } else { $selectedItem.DirectoryName }
         }
         $state.InformationIndex = 0
+        $state.Control = [hashtable]::Synchronized(@{CancelRequested=$false; Current=''; Completed=0; Total=0; Phase='Starting'; QueueIndex=0; QueueTotal=1})
         $ui.ActivityText.Clear()
         $ui.JournalText.Visibility = 'Collapsed'
         $ui.StatusText.Text = if ($Operation -like '*Preview') { 'Reading the selected files and building a preview…' } else { 'Applying changes. Please keep the app open until it finishes.' }
         Set-Busy $true
         $worker = [PowerShell]::Create()
         $script = {
-            param($Root,$Options,$Operation,$UndoPath)
+            param($Root,$Options,$Operation,$UndoPath,$Control)
             $ErrorActionPreference = 'Stop'
             Import-Module (Join-Path $Root 'LmsUnpacker.psm1') -Force
             if ($Operation -like 'Undo*') {
                 Undo-LmsOrganization -ReportPath $UndoPath -Preview:($Operation -eq 'UndoPreview')
                 return [pscustomobject]@{Undo=$true; Preview=($Operation -eq 'UndoPreview'); Errors=0; Details=@()}
             }
-            Invoke-LmsUnpacker @Options -Preview ($Operation -eq 'Preview')
+            $paths = @(@($Options.Path) + @($Options.QueuePaths) | Select-Object -Unique)
+            $Options.Remove('QueuePaths')
+            # Reject overlapping scopes before touching any files. A queue is an explicit set of independent inputs.
+            $seen=@{}
+            $inputs = @(foreach ($selectedPath in $paths) {
+                $selectedItem=Get-Item -LiteralPath $selectedPath -ErrorAction Stop
+                if (-not $seen.ContainsKey($selectedItem.FullName)) { $seen[$selectedItem.FullName]=$true; $selectedItem }
+            })
+            foreach ($input in $inputs) {
+                if (-not $input.PSIsContainer -and $input.Extension -ne '.zip') { throw 'Each queued item must be a folder or ZIP.' }
+                if (-not $input.PSIsContainer -and ($Options.ExistingOnly -or $Options.OrganizeExisting)) {
+                    if ($Options.ExistingOnly) { throw 'Loose-document tasks require folders throughout the queue.' }
+                }
+                foreach ($other in $inputs) {
+                    if ($input -ne $other -and $other.PSIsContainer -and $input.FullName.StartsWith(($other.FullName.TrimEnd('\') + '\'),[StringComparison]::OrdinalIgnoreCase)) { throw 'Queue paths overlap. Remove the nested selection and preview again.' }
+                }
+            }
+            $total = [pscustomobject]@{Archives=0; Written=0; Skipped=0; Moved=0; Unclassified=0; Errors=0; Cancelled=$false; Preview=($Operation -eq 'Preview'); Journal=$null; Details=@()}
+            $sharedTargets = @{}
+            $Control.QueueTotal = $inputs.Count
+            foreach ($input in $inputs) {
+                if ($Control.CancelRequested) { $total.Cancelled=$true; break }
+                $Control.QueueIndex++; $Control.Completed=0; $Control.Total=0
+                $jobOptions = @{} + $Options
+                $jobOptions.Path=$input.FullName
+                if (-not $input.PSIsContainer) { $jobOptions.OrganizeExisting=$false }
+                $result = Invoke-LmsUnpacker @jobOptions -Preview ($Operation -eq 'Preview') -Control $Control -PlannedTargets $sharedTargets
+                foreach ($field in @('Archives','Written','Skipped','Moved','Unclassified','Errors')) { $total.$field += $result.$field }
+                $total.Details += $result.Details
+                if ($result.Journal) { $total.Journal = (@($total.Journal,$result.Journal) | Where-Object { $_ }) -join [Environment]::NewLine }
+                $total.Cancelled = $result.Cancelled
+                if ($result.Errors -gt 0 -or $result.Cancelled) { break }
+            }
+            return $total
         }
-        $null = $worker.AddScript($script).AddArgument($PSScriptRoot).AddArgument($Options).AddArgument($Operation).AddArgument($UndoPath)
+        $null = $worker.AddScript($script).AddArgument($PSScriptRoot).AddArgument($Options).AddArgument($Operation).AddArgument($UndoPath).AddArgument($state.Control)
         $state.Worker = $worker
         try { $state.Handle = $worker.BeginInvoke(); $timer.Start() }
         catch { $worker.Dispose(); $state.Worker = $null; Set-Busy $false; throw }
     }
     function Read-Activity {
+        if ($state.Control -and -not $state.Control.CancelRequested) {
+            $progress = $state.Control
+            $ui.BusyProgress.IsIndeterminate = $progress.Total -eq 0
+            if ($progress.Total -gt 0) { $ui.BusyProgress.Value = [Math]::Min(100,100 * $progress.Completed / $progress.Total) }
+            $ui.StatusText.Text = "Queue $($progress.QueueIndex)/$($progress.QueueTotal) - $($progress.Phase): $($progress.Completed)/$($progress.Total) $($progress.Current)"
+        }
         $stream = $state.Worker.Streams.Information
         while ($state.InformationIndex -lt $stream.Count) {
             $ui.ActivityText.AppendText([string]$stream[$state.InformationIndex].MessageData + "`r`n")
@@ -156,9 +204,10 @@ try {
                 $rows = @($result.Details | ForEach-Object {
                     $destination = if ($_.PSObject.Properties['Target']) { $_.Target } else { $_.Path }
                     $relative = if ($destination -and $destination.StartsWith($rootPrefix,[StringComparison]::OrdinalIgnoreCase)) { $destination.Substring($rootPrefix.Length) } else { $destination }
-                    [pscustomobject]@{ Action=$_.Action; File=[IO.Path]::GetFileName($_.Source); Destination=$relative; FullDestination=$destination; Reason=$_.Reason }
+                    [pscustomobject]@{ Action=$_.Action; File=[IO.Path]::GetFileName($_.Source); Source=$_.Source; Course=$_.Course; Destination=$relative; FullDestination=$destination; Reason=$_.Reason }
                 })
                 $ui.PlanGrid.ItemsSource = $rows
+                Update-ReviewFilter
                 $prefix = if ($result.Preview) { 'Planned' } else { 'Completed' }
                 $ui.SummaryText.Text = "$prefix`: $($result.Archives) ZIPs; $($result.Written) extracted; $($result.Moved) organized; $($result.Skipped) skipped; $($result.Unclassified) unclassified."
                 if ($result.Journal) { $ui.JournalText.Text = 'Undo record: ' + $result.Journal; $ui.JournalText.Visibility = 'Visible' }
@@ -168,6 +217,10 @@ try {
             $ui.ApplyButton.IsEnabled = $result.Preview -and ($state.Operation -eq 'UndoPreview' -or ($result.Archives + $result.Moved -gt 0))
             $ui.ApplyButton.Content = if ($state.Operation -eq 'UndoPreview') { '_Restore original locations' } else { '_Apply changes' }
             $ui.StatusText.Text = if ($ui.ApplyButton.IsEnabled) { 'Preview ready • Review destinations and settings, then apply.' } elseif ($result.Preview) { 'Nothing to apply. Check the selected folder, task and scan depth.' } else { 'Finished • Your selected folder is ready to open.' }
+            if ($result.PSObject.Properties['Cancelled'] -and $result.Cancelled) {
+                $state.Preview=$null; $ui.ApplyButton.IsEnabled=$false
+                $ui.StatusText.Text='Cancelled safely. Completed work remains; unprocessed ZIPs are kept. Preview again to continue.'
+            }
             if (-not $result.Preview -and -not $SmokeTest) { Save-Preferences }
         } catch {
             $timer.Stop()
@@ -181,6 +234,8 @@ try {
             if (-not $state.Busy -and $state.Worker) { $state.Worker.Dispose(); $state.Worker = $null; $state.Handle = $null }
         }
     })
+    . (Join-Path $PSScriptRoot 'ProfileEditor.ps1')
+    . (Join-Path $PSScriptRoot 'DesktopFeatures.ps1')
     $ui.PreviewButton.Add_Click({ try { $state.UndoPath = $null; Start-Work 'Preview' (Get-Options) $null } catch { Show-Problem $_.Exception.Message } })
     $ui.ApplyButton.Add_Click({
         try {
@@ -197,8 +252,8 @@ try {
     })
     $ui.ZipButton.Add_Click({
         $dialog = [Microsoft.Win32.OpenFileDialog]::new()
-        $dialog.Title = 'Choose one ZIP'; $dialog.Filter = 'ZIP archives (*.zip)|*.zip'
-        if ($dialog.ShowDialog($window)) { $ui.InputPath.Text = $dialog.FileName }
+        $dialog.Title = 'Choose ZIPs'; $dialog.Filter = 'ZIP archives (*.zip)|*.zip'; $dialog.Multiselect=$true
+        if ($dialog.ShowDialog($window)) { Set-SelectedPaths $dialog.FileNames }
     })
     $ui.ProfileBrowseButton.Add_Click({
         $dialog = [Microsoft.Win32.OpenFileDialog]::new()
@@ -238,7 +293,7 @@ try {
     $ui.OpenFolderButton.Add_Click({
         try {
             $selected = $ui.InputPath.Text.Trim().Trim('"')
-            $folder = if ([IO.Directory]::Exists($selected)) { $selected } else { [IO.Path]::GetDirectoryName($selected) }
+            $folder = if ($ui.OutputPath.IsEnabled -and $ui.OutputPath.Text.Trim()) { $ui.OutputPath.Text.Trim().Trim('"') } elseif ([IO.Directory]::Exists($selected)) { $selected } else { [IO.Path]::GetDirectoryName($selected) }
             if (-not [IO.Directory]::Exists($folder)) { throw 'The selected folder does not exist.' }
             Start-Process -FilePath explorer.exe -ArgumentList ('"' + $folder + '"')
         } catch { Show-Problem $_.Exception.Message }
@@ -257,7 +312,7 @@ try {
         try { if ([IO.File]::Exists($shortcut)) { [IO.File]::Delete($shortcut) }; $ui.RemoveShortcutButton.Visibility = 'Collapsed'; $ui.StatusText.Text = 'Start menu shortcut removed. The app copy remains in LocalAppData\Programs\LMS Unpacker.' }
         catch { Show-Problem $_.Exception.Message }
     })
-    foreach ($name in @('InputPath','ProfilePath')) { $ui[$name].Add_TextChanged({ Invalidate-Preview }) }
+    foreach ($name in @('InputPath','ProfilePath','OutputPath')) { $ui[$name].Add_TextChanged({ Invalidate-Preview }) }
     foreach ($name in @('TaskChoice','ProfileChoice','GroupChoice','ConflictChoice')) { $ui[$name].Add_SelectionChanged({ Invalidate-Preview }) }
     foreach ($name in @('KeepZip','ScanChildren')) { $ui[$name].Add_Click({ Invalidate-Preview }) }
     $window.Add_PreviewDragOver({
@@ -270,8 +325,7 @@ try {
         $event.Handled = $true
         if ($state.Busy -or -not $event.Data.GetDataPresent([Windows.DataFormats]::FileDrop)) { return }
         $paths = @($event.Data.GetData([Windows.DataFormats]::FileDrop))
-        if ($paths.Count -ne 1) { Show-Problem 'Drop one folder or ZIP. Select a folder to process several downloads together.'; return }
-        $ui.InputPath.Text = $paths[0]
+        Set-SelectedPaths $paths
     })
     $window.Add_Closing({ param($sender,$event)
         if ($state.Busy) { $event.Cancel = $true; $ui.StatusText.Text = 'Please wait for this operation to finish before closing.' }

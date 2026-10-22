@@ -5,9 +5,11 @@ course outlines, labs, practice sheets and lectures. A profile adds your course 
 ZIP routing and syllabus topic rules. It is optional, local, and reusable each semester.
 The tool does not upload documents or require an LMS login.
 
+The desktop also has **Edit courses and syllabus**: edit two labeled tables, then save a validated profile copy. In a preview, **Show only unclassified files** and **Add rule for selected file** can seed a new rule. The rule starts as an exact filename match; broaden its pattern deliberately for future downloads.
+
 ## Build a profile using CSV
 
-In the desktop app, select an Organize task and click **Create a profile from CSV**.
+In the desktop app, select an Organize task and click **Import profile from CSV**.
 Choose a courses CSV, optionally a syllabus CSV, and a new JSON filename. The generated
 profile is selected automatically. The independent CLI provides the same builder with
 `LMS-Unpacker-CLI.exe --profile`. Open the embedded visual guide to download sample CSVs.

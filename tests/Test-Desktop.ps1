@@ -87,6 +87,47 @@ try {
     Check-Desktop (-not $ui.ApplyButton.IsEnabled -and $ui.ResultsTabs.SelectedIndex -eq 1 -and $ui.ActivityText.Text -match 'ERROR') 'archive error not surfaced'
     Check-Desktop ([IO.File]::Exists($ui.InputPath.Text)) 'failed ZIP was deleted'
     Write-Host 'PASS: Desktop errors keep ZIPs and disable Apply'; $desktopPassed++
+    $queueA=Join-Path $fixtureRoot 'queue-a.zip'; $queueB=Join-Path $fixtureRoot 'queue-b.zip'
+    Make-DesktopZip $queueA 'same.txt' 'first'; Make-DesktopZip $queueB 'same.txt' 'second'
+    Set-SelectedPaths @($queueA,$queueB)
+    $ui.OutputPath.Text=Join-Path $fixtureRoot 'elsewhere'
+    $ui.KeepZip.IsChecked=$false; Invalidate-Preview
+    Click-Control PreviewButton; Wait-Desktop
+    Check-Desktop ($ui.ApplyButton.IsEnabled -and $ui.PlanGrid.Items.Count -eq 2 -and $ui.PlanGrid.Items[1].Action -eq 'Skip') ('queue shared preview failed: '+$ui.ActivityText.Text)
+    Check-Desktop (-not [IO.Directory]::Exists($ui.OutputPath.Text)) 'queue preview created output'
+    Click-Control ApplyButton; Wait-Desktop
+    Check-Desktop ([IO.File]::ReadAllText((Join-Path $ui.OutputPath.Text 'same.txt')) -eq 'first' -and -not [IO.File]::Exists($queueA) -and -not [IO.File]::Exists($queueB)) ('queue apply failed: '+$ui.ActivityText.Text)
+    Write-Host 'PASS: Multiple ZIP queue, shared collision plan and output picker'; $desktopPassed++
+
+    $ui.WorkspaceName.Text='Test workspace'
+    $ui.TaskChoice.SelectedIndex=2; $ui.ProfileChoice.SelectedIndex=1; $ui.GroupChoice.SelectedIndex=2
+    $saved=Get-WorkspaceSnapshot 'Test workspace'
+    Set-SelectedPaths @($fixtureRoot); $ui.OutputPath.Text=''; $ui.TaskChoice.SelectedIndex=0
+    Restore-Workspace $saved
+    Check-Desktop ($ui.InputPath.Text -eq $queueA -and $ui.QueueList.Items[0] -eq $queueB -and $ui.OutputPath.Text.EndsWith('elsewhere') -and $ui.TaskChoice.SelectedIndex -eq 2 -and $ui.GroupChoice.SelectedIndex -eq 2 -and -not $ui.ApplyButton.IsEnabled) 'workspace restore and preview invalidation'
+    Write-Host 'PASS: Saved workspace round trip with queue and organization settings'; $desktopPassed++
+
+    Import-Module (Join-Path $PSScriptRoot '../LmsUnpacker.psm1') -Force
+    $seed=[pscustomobject]@{Course='MATH-101'; Pattern='mystery.pdf'; Folder='Lectures/Unscheduled'; Topic='New topic'; Reason='Manual assignment'}
+    Show-ProfileEditor $window (Join-Path $PSScriptRoot '../profiles/nust.json') $seed {
+        param($editor,$courses,$rules)
+        Check-Desktop ($courses.Rows.Count -eq 6 -and $rules.Rows[0].Pattern -eq 'mystery.pdf') 'profile editor must load courses and prepend review rule'
+        Check-Desktop ($editor.FindName('Rules').Columns.Count -eq 5 -and $editor.FindName('Courses').Columns.Count -eq 3) 'profile controls missing'
+    }
+    Write-Host 'PASS: Native profile editor loads courses and seeded review rules'; $desktopPassed++
+
+    Make-DesktopZip $queueA 'new.txt' 'first'; Make-DesktopZip $queueB 'other.txt' 'second'
+    Set-SelectedPaths @($queueA,$queueB); $ui.TaskChoice.SelectedIndex=0
+    Start-Work 'Apply' (Get-Options) $null
+    Click-Control CancelButton
+    Wait-Desktop
+    Check-Desktop (-not $ui.ApplyButton.IsEnabled -and $ui.StatusText.Text -like 'Cancelled safely*' -and [IO.File]::Exists($queueB)) ('safe cancellation failed: '+$ui.ActivityText.Text)
+    Write-Host 'PASS: Cancel queue cooperatively and retain unprocessed ZIPs'; $desktopPassed++
+
+    Set-SelectedPaths @($fixtureRoot,$queueB)
+    Click-Control PreviewButton; Wait-Desktop
+    Check-Desktop (-not $ui.ApplyButton.IsEnabled -and $ui.ActivityText.Text -match 'overlap') 'overlapping queue scopes must fail before apply'
+    Write-Host 'PASS: Overlapping queue paths rejected before mutation'; $desktopPassed++
     Write-Host "All $desktopPassed desktop flow tests passed."
 } finally {
     if ($state.Busy -and $state.Worker) { $state.Worker.Stop(); $state.Worker.Dispose(); $state.Busy = $false }

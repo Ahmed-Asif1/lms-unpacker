@@ -2,6 +2,7 @@ name: Test and package
 on:
   push:
   pull_request:
+  workflow_call:
 permissions:
   contents: read
 jobs:
@@ -18,8 +19,28 @@ jobs:
       - name: Desktop control flows
         shell: powershell
         run: powershell.exe -NoProfile -STA -ExecutionPolicy Bypass -File ./Start-Desktop.ps1 -SmokeTest
+      - name: Portable engine and profile checks
+        shell: powershell
+        run: ./tests/Test-Portable.ps1
+  linux:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - name: Portable engine tests on Linux
+        shell: pwsh
+        run: ./tests/Test-Portable.ps1
+      - name: Build standalone Linux launcher
+        shell: pwsh
+        run: ./Build-Linux.ps1
+      - name: Test standalone shell launcher
+        shell: bash
+        run: bash tests/Test-Linux.sh
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: LMS-Unpacker-Linux
+          path: dist/*
   package:
-    needs: test
+    needs: [test, linux]
     runs-on: windows-latest
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1

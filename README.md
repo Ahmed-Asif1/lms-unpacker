@@ -1,7 +1,7 @@
 # LMS Unpacker
 
-Turn messy LMS ZIP downloads into usable course folders. A portable, offline Windows
-utility with three jobs: **flatten downloads**, **just unzip**, or **organize courses**.
+Turn messy LMS ZIP downloads into usable course folders. An offline Windows desktop
+app and Windows/Linux CLI with three jobs: **flatten downloads**, **just unzip**, or **organize courses**.
 
 **Defaults: flatten, skip existing filenames, delete successfully processed ZIPs.**
 When a filename already exists, its incoming version is discarded even if its content
@@ -20,6 +20,7 @@ is the repository snapshot. Executables and their SHA-256 files are separate rel
 | --- | --- |
 | **LMS-Unpacker.exe** — desktop app | Double-click; choose or drop a ZIP/folder; preview; apply |
 | **LMS-Unpacker-CLI.exe** — terminal edition | Run without arguments for a guided menu, or use named options |
+| **LMS-Unpacker-CLI.sh** — Linux CLI | `bash LMS-Unpacker-CLI.sh --help`; requires PowerShell 7 (`pwsh`) |
 
 You can keep either EXE anywhere. Supporting files and the offline guide are embedded;
 they are unpacked automatically into a temporary folder and removed on normal exit.
@@ -36,6 +37,58 @@ a successful preview before Apply. Changing options invalidates the preview. The
 are checked again when applying, so changes made outside the app can affect that run.
 The app waits for active work to finish before closing.
 
+### Workspaces, queues and destinations
+
+- Open **Saved workspaces and queue**, enter a name, and save the current paths and settings.
+  Select the saved name next time. Saving with the same name updates it; Remove forgets it.
+  Paths and settings stay in your local preferences file. Profiles remain at the paths you chose.
+- Select multiple ZIPs in **Choose ZIP**, or drop multiple folders/ZIPs into the window.
+  To combine folder selections, use **Add current path**, then choose the next folder.
+  **Clear queue** removes additional selections. Nested, overlapping scopes are rejected.
+- **ZIP output folder** chooses where extracted files go. Blank uses the existing location.
+  Course routing and original archive structure still apply. Loose documents are organized
+  in place with undo; the output setting is disabled for the loose-only task.
+- Preview checks the whole queue, including collisions between inputs. Apply stops on the
+  first failed queue item. Completed work remains, and errors retain the affected ZIP.
+- Progress reports the current queue item, phase and entry/file count. **Cancel safely**
+  finishes the current entry read or archive publication before stopping. A completed
+  archive may already have been deleted according to your setting. Unprocessed ZIPs remain.
+  Cancellation is not rollback; preview again before continuing.
+
+### Edit your courses visually
+
+Choose an Organize task and click **Edit courses and syllabus**. The Courses tab maps
+course codes to folders. The Syllabus rules tab matches filenames to categories, weeks
+and topics. Add a row at the bottom; select a row and press Delete to remove it.
+For example: `BIO-101 | *cell* | Lectures/Week 02 | Cell biology`.
+Save to a new JSON filename. The app validates the rules and selects your saved copy.
+You can also open and edit a selected custom or example profile; the original stays intact.
+
+After preview, check **Show only unclassified files**, select a row and click
+**Add rule for selected file**. This seeds an exact filename rule and its course at the
+top of the editor. Set a folder/topic, save, then preview again. Change the pattern to
+something like `*cell*` when it should match future downloads. First matching rule wins.
+No document contents are uploaded or read to guess syllabus dates.
+
+### Linux
+
+Install PowerShell 7 using [Microsoft's Linux instructions](https://learn.microsoft.com/powershell/scripting/install/installing-powershell-on-linux).
+The single `.sh` download embeds the application, not the PowerShell runtime. It does not
+download or install anything. Bash, `awk`, `base64` and `mktemp` are needed (standard on
+common Linux distributions). Run it directly with Bash, without changing permissions:
+
+```bash
+bash LMS-Unpacker-CLI.sh -Path "$HOME/Courses" -DryRun
+bash LMS-Unpacker-CLI.sh -Path "$HOME/Downloads/course.zip" -Mode Extract -OutputPath "$HOME/Courses"
+bash LMS-Unpacker-CLI.sh -Path "$HOME/Courses" -Mode Organize -ExistingOnly -GroupBy Topic -RulesPath /path/to/my-courses.json -DryRun
+```
+
+For a source checkout, `bash Run-Unpack.sh` launches the same engine. Linux has the CLI,
+profiles, grouping, preview, output selection and undo; the native WPF desktop is Windows-only.
+The same conservative ZIP filename rules apply on Linux, including rejecting Windows-reserved
+names and links. Do not use this tool to restore Unix permissions, symlinks or special files.
+The offline HTML guide needs a desktop browser to open; CLI extraction also works headlessly.
+
 ### Start menu (optional)
 
 Click **Add to Start menu**. The app copies its single EXE to
@@ -46,7 +99,7 @@ Close an older installed instance before adding an updated download.
 close the app and delete that specific `LMS Unpacker` folder. Preferences are stored
 separately in `%LOCALAPPDATA%\LMS Unpacker\preferences.json` and may also be deleted.
 
-No installation, administrator access, account, Python or network connection is needed.
+On Windows, no installation, administrator access, account, Python or network connection is needed.
 Requires Windows 10/11 and Windows PowerShell 5.1 (included with Windows), or PowerShell 7.
 The self-contained executables use Windows PowerShell 5.1. The optional source BAT
 prefers PowerShell 7 when installed. There are no network dependencies.
@@ -225,7 +278,7 @@ undo the newest one first.
   go to the Recycle Bin. Use Keep ZIP if you need a recoverable original.
 - Avoid concurrent runs against the same folders. Local NTFS folders are recommended;
   network/sync drives, locked files, disk capacity and Windows path limits can cause errors.
-- Exit code `0` means success/no work/cancel; `1` means an error. Mixed batches continue
+- Exit code `0` means success/no work/cancel; `1` means an error. Within a CLI folder scan, mixed batches continue
   with other ZIPs, then exit `1`. Errors organizing existing files stop ZIP processing.
 
 The EXEs launch their embedded scripts with a process-scoped execution policy;
@@ -240,19 +293,23 @@ From a repository checkout (the optional modular runtime ZIP omits build tools/t
 ```powershell
 .\tests\Run-Tests.ps1
 .\Build-Release.ps1
+pwsh -NoProfile -File .\Build-Linux.ps1
 ```
 
 The test suite uses temporary fixtures inside `tests/.runs`, including malicious ZIP
 paths, CRC failures, conflicts, grouping, course profiles, undo, and junctions. It never
 uses personal course documents. The release builder runs the engine and real WPF-control
 tests, then builds `dist/LMS-Unpacker.exe`, `dist/LMS-Unpacker-CLI.exe`, and the optional
-`dist/LMS-Unpacker-1.1.0.zip` from an explicit file list. It checks both standalone
+`dist/LMS-Unpacker-1.2.0.zip` from an explicit file list. It checks both standalone
 executables, CLI behavior, a shortcut in an isolated test folder, and temporary cleanup.
 Each artifact gets a SHA-256 checksum. Existing versioned ZIPs are not overwritten;
 the stable EXE filenames are refreshed when a new release is built. GitHub Actions runs tests on Windows PowerShell 5.1
-and PowerShell 7 and creates a downloadable build artifact after they pass.
+and PowerShell 7, tests the same engine and standalone shell launcher on Ubuntu,
+and creates downloadable Windows and Linux build artifacts after they pass.
+Matching version tags start the attested draft-release workflow described in the
+[code signing policy](docs/SIGNING.md).
 
-Share **only the desktop EXE or only the CLI EXE** according to the recipient's preference.
+Share **one desktop EXE, CLI EXE, or Linux shell file** according to the recipient's platform and preference.
 They each contain the app, docs, profiles and MIT license; no course documents, tests,
 local paths or private reports are included. The optional modular ZIP must be extracted
 as a whole if you choose to use the source BAT/PS1 launchers.
@@ -261,6 +318,6 @@ Release binaries are currently unsigned. Functional tests do not guarantee accep
 every Windows reputation/security policy. Signing and a screen-reader acceptance pass
 remain release-distribution tasks before making broad compatibility claims. A forced
 process kill may leave an `lms-unpacker-*` temporary runtime folder; normal exit removes it.
-See [profile guidance](docs/PROFILES.md) and [release changes](CHANGELOG.md).
+See [profile guidance](docs/PROFILES.md), [code signing policy and release provenance](docs/SIGNING.md), and [release changes](CHANGELOG.md).
 See [security and reporting guidance](SECURITY.md). The NUST example is unofficial;
 this project is not affiliated with NUST or an LMS provider.

@@ -214,15 +214,20 @@ function Invoke-LmsArchive($Zip, $Options, $Profile, [hashtable]$Planned) {
     $items = New-Object 'Collections.Generic.List[object]'
     try {
         $courseRoot = $Zip.DirectoryName
+        if ($Options.OutputPath) { $courseRoot = $Options.OutputPath }
         $courseName = $Zip.Directory.Name
         if ($Options.Mode -eq 'Organize') {
             $course = Get-LmsCourse $Zip.BaseName $Profile.Courses
             $parentCourse = Get-LmsCourse $Zip.Directory.Name $Profile.Courses
             if ($course) {
                 if ($parentCourse -and $parentCourse.Code -ne $course.Code) { throw 'ZIP course code conflicts with its containing course folder.' }
-                if (-not $parentCourse) { $courseRoot = Get-ContainedPath $Options.Root $course.Folder }
+                if ($Options.OutputPath) { $courseRoot = Get-ContainedPath $Options.OutputPath $course.Folder }
+                elseif (-not $parentCourse) { $courseRoot = Get-ContainedPath $Options.Root $course.Folder }
                 $courseName = $course.Code
-            } elseif ($parentCourse) { $courseName = $parentCourse.Code }
+            } elseif ($parentCourse) {
+                $courseName = $parentCourse.Code
+                if ($Options.OutputPath) { $courseRoot = Get-ContainedPath $Options.OutputPath $parentCourse.Folder }
+            }
         }
         Assert-PlainPath $Zip.FullName
         $checksums = [LmsUnpacker.ZipIntegrity]::ReadChecksums($Zip.FullName,$Options.MaxEntries)
@@ -244,6 +249,11 @@ function Invoke-LmsArchive($Zip, $Options, $Profile, [hashtable]$Planned) {
         $entryIndex = -1
         foreach ($entry in $archive.Entries) {
             $entryIndex++
+            if ($Options.Control.CancelRequested) { throw [OperationCanceledException]::new('Cancelled before archive publication; ZIP retained.') }
+            $Options.Control.Current = $entry.FullName
+            $Options.Control.Completed = $entryIndex
+            $Options.Control.Total = $archive.Entries.Count
+            $Options.Control.Phase = 'Reading archive'
             $relative = Get-SafeRelativePath $entry.FullName
             $isDirectory = $entry.FullName.EndsWith('/') -or $entry.FullName.EndsWith('\')
             if ($isDirectory -and ($entry.Length -ne 0 -or $checksums[$entryIndex] -ne 0)) { throw 'Directory entry contains unexpected data.' }
@@ -273,7 +283,7 @@ function Invoke-LmsArchive($Zip, $Options, $Profile, [hashtable]$Planned) {
             $stage = if ($scratch) { Join-Path $scratch ($items.Count.ToString() + '.data') } else { $null }
             $hash = Copy-LmsEntry $entry $stage $checksums[$entryIndex]
             $decision = Get-LmsTarget $target $hash $Options.Conflict $Planned
-            $items.Add([pscustomobject]@{Path=$decision.Path; Action=$decision.Action; Stage=$stage; Source=$relative; Reason=$reason})
+            $items.Add([pscustomobject]@{Path=$decision.Path; Action=$decision.Action; Stage=$stage; Source=$relative; Reason=$reason; Course=$courseName})
         }
         $filePaths = @{}
         foreach ($item in $items) { if ($item.Action -ne 'Directory') { $filePaths[$item.Path] = $true } }
@@ -284,6 +294,8 @@ function Invoke-LmsArchive($Zip, $Options, $Profile, [hashtable]$Planned) {
                 $parent = [IO.Path]::GetDirectoryName($parent)
             }
         }
+        if ($Options.Control.CancelRequested) { throw [OperationCanceledException]::new('Cancelled before archive publication; ZIP retained.') }
+        $Options.Control.Phase = 'Finishing archive safely'
         foreach ($item in $items) {
             Write-Host "  [$($item.Action)] $($item.Path)"
             if ($Options.Mode -eq 'Organize' -and $item.Action -ne 'Directory') { Write-Host "    Why: $($item.Reason)" }
@@ -298,10 +310,12 @@ function Invoke-LmsArchive($Zip, $Options, $Profile, [hashtable]$Planned) {
             if (-not $Options.Preview) { [IO.File]::Delete($Zip.FullName) }
             Write-Host "  [Delete ZIP] $($Zip.FullName)"
         } else { Write-Host "  [Keep ZIP] $($Zip.FullName)" }
+        $Options.Control.Completed = $Options.Control.Total
         return [pscustomobject]@{
             Written=@($items | Where-Object { $_.Action -in @('Write','Overwrite') }).Count
             Skipped=@($items | Where-Object { $_.Action -in @('Skip','Duplicate') }).Count
-            Details=@($items | Select-Object Source, @{Name='Target';Expression={$_.Path}}, Action, Reason)
+            Unclassified=@($items | Where-Object { $_.Reason -like 'Unclassified archive entry*' }).Count
+            Details=@($items | Select-Object Source, @{Name='Target';Expression={$_.Path}}, Action, Reason, Course)
         }
     } finally {
         if ($archive) { $archive.Dispose() }
@@ -324,6 +338,11 @@ function Invoke-LmsOrganization($Files, [string]$Root, $Options, $Profile, [hash
     $details = New-Object 'Collections.Generic.List[object]'
     $unclassified = 0
     foreach ($file in $Files) {
+        if ($Options.Control.CancelRequested) { break }
+        $Options.Control.Current = $file.Name
+        $Options.Control.Phase = 'Organizing documents'
+        $Options.Control.Completed++
+        $Options.Control.Total = @($Files).Count
         if ($file.Extension.ToLowerInvariant() -notin @('.pdf','.doc','.docx','.ppt','.pptx','.xls','.xlsx','.odt','.odp','.epub')) { continue }
         Assert-PlainPath $file.FullName
         $course = Get-LmsCourse $file.Directory.Name $Profile.Courses
@@ -332,7 +351,7 @@ function Invoke-LmsOrganization($Files, [string]$Root, $Options, $Profile, [hash
         if (-not $classification.Folder) {
             Write-Host "  [Unclassified; unchanged] $($file.FullName)"
             $unclassified++
-            $details.Add([pscustomobject]@{Source=$file.FullName; Target=$null; Action='Unclassified'; Reason=$classification.Reason})
+            $details.Add([pscustomobject]@{Source=$file.FullName; Target=$null; Action='Unclassified'; Reason=$classification.Reason; Course=$courseName})
             continue
         }
         $target = Get-ContainedPath $file.DirectoryName ($classification.Folder + '/' + $file.Name)
@@ -346,7 +365,7 @@ function Invoke-LmsOrganization($Files, [string]$Root, $Options, $Profile, [hash
             $hash = Get-FileDigest $file.FullName
             $decision = Get-LmsTarget $target $hash $Options.Conflict $Planned
         }
-        $details.Add([pscustomobject]@{Source=$file.FullName; Target=$decision.Path; Action=$decision.Action; Reason=$classification.Reason})
+        $details.Add([pscustomobject]@{Source=$file.FullName; Target=$decision.Path; Action=$decision.Action; Reason=$classification.Reason; Course=$courseName})
         if ($decision.Action -ne 'Write') { Write-Host "  [$($decision.Action); original kept] $($file.FullName)"; continue }
         Write-Host "  [Move] $($file.FullName) -> $($decision.Path)"
         Write-Host "    Why: $($classification.Reason)"
@@ -379,11 +398,21 @@ function Invoke-LmsUnpacker {
         [ValidateSet('Category','Week','Topic')][string]$GroupBy='Category',
         [ValidateRange(0,1)][int]$Depth=1, [ValidateSet('Skip','Rename','Overwrite')][string]$Conflict='Skip',
         [bool]$KeepZip=$false, [bool]$Preview=$false, [bool]$OrganizeExisting=$false,
-        [bool]$ExistingOnly=$false, [string]$RulesPath,
+        [bool]$ExistingOnly=$false, [string]$RulesPath, [string]$OutputPath,
+        [hashtable]$Control, [hashtable]$PlannedTargets,
         [ValidateRange(1,100000)][int]$MaxEntries=10000,
         [ValidateRange(1,107374182400)][long]$MaxExpandedBytes=2GB
     )
     $options = @{} + $PSBoundParameters
+    if (-not $Control) { $Control = [hashtable]::Synchronized(@{CancelRequested=$false; Current=''; Completed=0; Total=0; Phase=''}) }
+    $options.Control = $Control
+    $options.OutputPath = $null
+    if ($OutputPath) {
+        $options.OutputPath = $ExecutionContext.SessionState.Path.GetUnresolvedProviderPathFromPSPath($OutputPath)
+        Assert-PlainPath $options.OutputPath
+        if (Test-Path -LiteralPath $options.OutputPath -PathType Leaf) { throw 'Output path must be a folder.' }
+        if ($ExistingOnly) { throw 'OutputPath applies to ZIP extraction only. Loose files are organized in place with undo.' }
+    }
     foreach ($pair in @{Mode=$Mode; GroupBy=$GroupBy; Conflict=$Conflict; KeepZip=$KeepZip; Preview=$Preview; ExistingOnly=$ExistingOnly; MaxEntries=$MaxEntries; MaxExpandedBytes=$MaxExpandedBytes}.GetEnumerator()) { $options[$pair.Key] = $pair.Value }
     if (($OrganizeExisting -or $ExistingOnly) -and $Mode -ne 'Organize') { throw 'Use -Mode Organize with -OrganizeExisting or -ExistingOnly.' }
     if (($OrganizeExisting -or $ExistingOnly) -and $Conflict -eq 'Overwrite') { throw 'Existing-file organization supports Skip or Rename, not Overwrite.' }
@@ -413,12 +442,12 @@ function Invoke-LmsUnpacker {
     $options.Root = $root
     $options.Sources = @{}
     foreach ($zip in $zips) { $options.Sources[$zip.FullName] = $true }
-    $result = [pscustomobject]@{Archives=0; Written=0; Skipped=0; Moved=0; Unclassified=0; Errors=0; Preview=$Preview; Journal=$null; Details=@()}
+    $result = [pscustomobject]@{Archives=0; Written=0; Skipped=0; Moved=0; Unclassified=0; Errors=0; Cancelled=$false; Preview=$Preview; Journal=$null; Details=@()}
     Write-Host "LMS Unpacker | Mode: $Mode | Conflicts: $Conflict | Keep ZIP: $KeepZip"
     if ($Mode -eq 'Organize') { Write-Host "Grouping: $GroupBy" }
     if ($Preview) { Write-Host 'PREVIEW: no files, folders or logs will be created, changed or deleted.' }
     if (-not $ExistingOnly -and -not $KeepZip) { Write-Host 'Successfully processed ZIPs will be deleted, including files skipped because their names already exist.' }
-    $planned = @{}
+    $planned = if ($null -ne $PlannedTargets) { $PlannedTargets } else { @{} }
     if ($OrganizeExisting -or $ExistingOnly) {
         try {
             $organization = Invoke-LmsOrganization ($files | Sort-Object FullName) $root $options $profile $planned
@@ -435,16 +464,20 @@ function Invoke-LmsUnpacker {
     if (-not $ExistingOnly) {
         if ($zips.Count -eq 0) { Write-Host 'No ZIP files found in the selected scan scope.' }
         foreach ($zip in $zips) {
+            if ($Control.CancelRequested) { break }
             Write-Host "Archive: $($zip.FullName)"
             $archivePlan = @{} + $planned
             try {
                 $unpacked = Invoke-LmsArchive $zip $options $profile $archivePlan
                 $result.Archives++; $result.Written += $unpacked.Written; $result.Skipped += $unpacked.Skipped
+                $result.Unclassified += $unpacked.Unclassified
                 $result.Details += $unpacked.Details
-                $planned = $archivePlan
-            } catch { $result.Errors++; Write-Host "[ERROR; ZIP retained] $($_.Exception.Message)" }
+                foreach ($key in $archivePlan.Keys) { $planned[$key] = $archivePlan[$key] }
+            } catch [OperationCanceledException] { $result.Cancelled=$true; Write-Host $_.Exception.Message; break }
+            catch { $result.Errors++; Write-Host "[ERROR; ZIP retained] $($_.Exception.Message)" }
         }
     }
+    $result.Cancelled = $result.Cancelled -or [bool]$Control.CancelRequested
     Write-Host "Summary: $($result.Archives) ZIP(s), $($result.Written) file(s) written, $($result.Skipped) skipped, $($result.Moved) organized, $($result.Unclassified) unclassified, $($result.Errors) error(s)."
     return $result
 }

@@ -67,3 +67,10 @@ TROUBLESHOOTING
   close it and delete %LOCALAPPDATA%\Programs\LMS Unpacker.
 - A forced process kill may leave lms-unpacker-* files in your temporary folder.
   Normal exit removes the embedded runtime. Keep the app open while reading help.
+Linux: install PowerShell 7 (pwsh), then use:
+  bash LMS-Unpacker-CLI.sh --help
+  bash LMS-Unpacker-CLI.sh -Path "$HOME/Courses" -DryRun
+  bash LMS-Unpacker-CLI.sh -Path "$HOME/Downloads/course.zip" -Mode Extract -OutputPath "$HOME/Courses"
+The Linux download embeds the app files, but requires an installed PowerShell runtime.
+Desktop 1.2 adds saved workspaces, multiple-input queues, output selection, a visual
+profile editor and unclassified review. See the Visual guide inside the app.

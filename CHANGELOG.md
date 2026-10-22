@@ -1,5 +1,16 @@
 # Changelog
 
+## 1.2.0
+
+- Add a visual course/syllabus editor and unclassified-file review with reusable rules.
+- Add optional ZIP output folders, saved desktop workspaces and multi-input queues.
+- Report current file/entry progress and support cancellation at safe boundaries.
+- Share collision planning across queued inputs and reject overlapping input scopes.
+- Add a standalone Linux shell distribution using the same engine (PowerShell 7 required).
+- Add Windows/Linux checks and a tag-based draft release workflow with GitHub build attestations.
+- Document free signing options and provide an optional existing-certificate signing helper.
+- Preserve skip-existing and delete-successful-ZIP defaults, preview and organization undo.
+
 ## 1.1.0
 
 - Ship independent single-file desktop and CLI executables with embedded offline resources.
