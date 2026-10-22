@@ -22,7 +22,7 @@ try {
     $destination = Join-Path $buildRoot "LMS-Unpacker-$version.zip"
     $icon = Join-Path $buildRoot 'App.ico'
     & (Join-Path $PSScriptRoot 'packaging\New-AppIcon.ps1') -OutputPath $icon
-    $files = @('Unpack-Lms.ps1','LmsUnpacker.psm1','ZipIntegrity.cs','Start-Unpacker.ps1','Run-Unpack.bat','Run-Unpack.sh','Start-Cli.ps1','Start-Desktop.ps1','Desktop.xaml','DesktopIntegration.psm1','DesktopFeatures.ps1','ProfileEditor.ps1','HistoryDialog.ps1',
+    $files = @('Unpack-Lms.ps1','LmsUnpacker.psm1','ZipIntegrity.cs','Start-Unpacker.ps1','Run-Unpack.bat','Run-Unpack.sh','Start-Cli.ps1','Start-Desktop.ps1','Desktop.xaml','DesktopIntegration.psm1','DesktopFeatures.ps1','ProfileEditor.ps1','HistoryDialog.ps1','DesktopFeedback.ps1',
         'Undo-Organization.ps1','New-CourseProfile.ps1','START-HERE.html','LAUNCH-HELP.txt','README.md','PRIVACY.md','CONTRIBUTING.md','docs/DOWNLOADS.md','docs/ROADMAP.md','docs/SIGNPATH-APPLICATION.md','SECURITY.md','LICENSE','VERSION','CHANGELOG.md',
         'profiles\nust.json','profiles\courses.example.csv','profiles\syllabus.example.csv','docs\PROFILES.md','docs\SIGNING.md')
     Add-Type -AssemblyName System.IO.Compression.FileSystem

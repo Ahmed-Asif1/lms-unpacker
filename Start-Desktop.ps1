@@ -14,7 +14,7 @@ try {
         'CreateProfileButton','GroupChoice','GroupHint','ConflictChoice','KeepZip','ScanChildren','DefaultsNotice','PreviewButton','UndoButton',
         'SummaryText','ResultsTabs','PlanGrid','ActivityText','JournalText','StatusText','BusyProgress','OpenFolderButton','ApplyButton',
         'WorkspaceChoice','WorkspaceName','SaveWorkspaceButton','RemoveWorkspaceButton','QueueList','QueueAddButton','QueueClearButton','QueueFirstButton','QueueRemoveButton','QueueUpButton','QueueDownButton','FileDetails',
-        'EditProfileButton','ClassifyButton','OutputPath','OutputBrowseButton','CancelButton','UnclassifiedOnly','QueueExpander')) {
+        'EditProfileButton','ClassifyButton','OutputPath','OutputBrowseButton','CancelButton','UnclassifiedOnly','QueueExpander','FeedbackPanel','FeedbackTitle','WorkItemText','ResultOpenButton')) {
         $ui[$name] = $window.FindName($name)
         if (-not $ui[$name]) { throw "Missing interface control: $name" }
     }
@@ -66,6 +66,7 @@ try {
         $ui.PlanGrid.ItemsSource = $null
         $ui.SummaryText.Text = 'Selection or settings changed. Preview to see the current plan.'
         $ui.StatusText.Text = 'Ready • Preview first'
+        Reset-Feedback
         $ui.OpenFolderButton.IsEnabled = -not [string]::IsNullOrWhiteSpace($ui.InputPath.Text)
         Update-Hints
     }
@@ -97,6 +98,9 @@ try {
         $ui.CancelButton.IsEnabled = $true
         $ui.ApplyButton.IsEnabled = $false
         $ui.BusyProgress.Visibility = if ($Busy) { 'Visible' } else { 'Collapsed' }
+        $ui.OpenFolderButton.IsEnabled = -not $Busy -and -not [string]::IsNullOrWhiteSpace($ui.InputPath.Text)
+        $ui.PreviewButton.Content = if ($Busy -and $state.Operation -like '*Preview') { 'Reading files...' } else { '_Preview changes' }
+        if ($Busy -and $state.Operation -like '*Apply') { $ui.ApplyButton.Content='Working...' }
     }
     function Save-Preferences {
         try {
@@ -118,6 +122,7 @@ try {
         $ui.ActivityText.Clear()
         $ui.JournalText.Visibility = 'Collapsed'
         $ui.StatusText.Text = if ($Operation -like '*Preview') { 'Reading the selected files and building a preview…' } else { 'Applying changes. Please keep the app open until it finishes.' }
+        Start-Feedback $Operation $Options
         Set-Busy $true
         $worker = [PowerShell]::Create()
         $script = {
@@ -166,14 +171,15 @@ try {
         $null = $worker.AddScript($script).AddArgument($PSScriptRoot).AddArgument($Options).AddArgument($Operation).AddArgument($UndoPath).AddArgument($state.Control)
         $state.Worker = $worker
         try { $state.Handle = $worker.BeginInvoke(); $timer.Start() }
-        catch { $worker.Dispose(); $state.Worker = $null; Set-Busy $false; throw }
+        catch { $worker.Dispose(); $state.Worker = $null; Set-Busy $false; Stop-FeedbackWithError; throw }
     }
     function Read-Activity {
+        Update-Feedback
         if ($state.Control -and -not $state.Control.CancelRequested) {
             $progress = $state.Control
             $ui.BusyProgress.IsIndeterminate = $progress.Total -eq 0
             if ($progress.Total -gt 0) { $ui.BusyProgress.Value = [Math]::Min(100,100 * $progress.Completed / $progress.Total) }
-            $ui.StatusText.Text = "Queue $($progress.QueueIndex)/$($progress.QueueTotal) - $($progress.Phase): $($progress.Completed)/$($progress.Total) $($progress.Current)"
+            $ui.StatusText.Text = 'Working - you can review the activity log while this runs.'
         }
         $stream = $state.Worker.Streams.Information
         while ($state.InformationIndex -lt $stream.Count) {
@@ -223,6 +229,7 @@ try {
                 $ui.StatusText.Text='Cancelled safely. Completed work remains; unprocessed ZIPs are kept. Preview again to continue.'
             }
             if (-not $result.Preview -and -not $SmokeTest) { Save-Preferences }
+            Complete-Feedback $result
         } catch {
             $timer.Stop()
             $state.Preview = $null
@@ -231,6 +238,7 @@ try {
             $ui.SummaryText.Text = 'Operation stopped or reported errors. Review the activity log before trying again.'
             Set-Busy $false
             $ui.StatusText.Text = 'Needs attention • See Activity and errors'
+            Stop-FeedbackWithError
         } finally {
             if (-not $state.Busy -and $state.Worker) { $state.Worker.Dispose(); $state.Worker = $null; $state.Handle = $null }
         }
@@ -238,6 +246,7 @@ try {
     . (Join-Path $PSScriptRoot 'ProfileEditor.ps1')
     . (Join-Path $PSScriptRoot 'DesktopFeatures.ps1')
     . (Join-Path $PSScriptRoot 'HistoryDialog.ps1')
+    . (Join-Path $PSScriptRoot 'DesktopFeedback.ps1')
     $ui.PreviewButton.Add_Click({ try { $state.UndoPath = $null; Start-Work 'Preview' (Get-Options) $null } catch { Show-Problem $_.Exception.Message } })
     $ui.ApplyButton.Add_Click({
         try {

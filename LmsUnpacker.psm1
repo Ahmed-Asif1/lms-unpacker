@@ -299,8 +299,11 @@ function Invoke-LmsArchive($Zip, $Options, $Profile, [hashtable]$Planned) {
             }
         }
         if ($Options.Control.CancelRequested) { throw [OperationCanceledException]::new('Cancelled before archive publication; ZIP retained.') }
-        $Options.Control.Phase = 'Finishing archive safely'
+        $Options.Control.Phase = if ($Options.Preview) { 'Completing archive preview' } else { 'Writing verified files' }
+        $Options.Control.Completed=0
+        $Options.Control.Total=$items.Count
         foreach ($item in $items) {
+            $Options.Control.Current=$item.Source
             Write-Host "  [$($item.Action)] $($item.Path)"
             if ($item.Action -ne 'Directory' -and $item.Comparison) { Write-Host "    $($item.Comparison)" }
             if ($Options.Mode -eq 'Organize' -and $item.Action -ne 'Directory') { Write-Host "    Why: $($item.Reason)" }
@@ -308,6 +311,7 @@ function Invoke-LmsArchive($Zip, $Options, $Profile, [hashtable]$Planned) {
                 if ($item.Action -eq 'Directory') { $null = [IO.Directory]::CreateDirectory($item.Path) }
                 elseif ($item.Action -in @('Write','Overwrite')) { Install-LmsFile $item.Stage $item.Path ($item.Action -eq 'Overwrite') }
             }
+            $Options.Control.Completed++
         }
         $archive.Dispose()
         $archive = $null
@@ -468,9 +472,11 @@ function Invoke-LmsUnpacker {
         }
     }
     if (-not $ExistingOnly) {
+        $Control.ArchiveIndex=0; $Control.ArchiveTotal=$zips.Count
         if ($zips.Count -eq 0) { Write-Host 'No ZIP files found in the selected scan scope.' }
         foreach ($zip in $zips) {
             if ($Control.CancelRequested) { break }
+            $Control.ArchiveIndex++; $Control.Current=$zip.Name; $Control.Phase='Checking archive'; $Control.Completed=0; $Control.Total=0
             Write-Host "Archive: $($zip.FullName)"
             $archivePlan = @{} + $planned
             try {

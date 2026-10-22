@@ -63,7 +63,11 @@ The app waits for active work to finish before closing.
   another original folder if needed. Available records are validated in an undo preview;
   changed files and occupied original paths prevent restoration. ZIP deletion and extraction
   cannot be undone here. Completed and unreadable records remain visible with their status.
-- Progress reports the current queue item, phase and entry/file count. **Cancel safely**
+- A prominent progress panel reports the current queue input, ZIP, phase, file and elapsed
+  time, with matching Windows taskbar progress. The bar measures the current phase;
+  it can restart for the next archive. A persistent **Done** panel shows counts and whether
+  ZIPs were kept or deleted, plus **Open result folder**. Errors and cancellation have
+  separate messages. **Cancel safely**
   finishes the current entry read or archive publication before stopping. A completed
   archive may already have been deleted according to your setting. Unprocessed ZIPs remain.
   Cancellation is not rollback; preview again before continuing.
@@ -313,7 +317,7 @@ The test suite uses temporary fixtures inside `tests/.runs`, including malicious
 paths, CRC failures, conflicts, grouping, course profiles, undo, and junctions. It never
 uses personal course documents. The release builder runs the engine and real WPF-control
 tests, then builds `dist/LMS-Unpacker.exe`, `dist/LMS-Unpacker-CLI.exe`, and the optional
-`dist/LMS-Unpacker-1.3.0.zip` from an explicit file list. It checks both standalone
+`dist/LMS-Unpacker-1.3.1.zip` from an explicit file list. It checks both standalone
 executables, CLI behavior, a shortcut in an isolated test folder, and temporary cleanup.
 Each artifact gets a SHA-256 checksum. Existing versioned ZIPs are not overwritten;
 the stable EXE filenames are refreshed when a new release is built. GitHub Actions runs tests on Windows PowerShell 5.1

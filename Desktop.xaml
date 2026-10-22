@@ -2,6 +2,7 @@
         Title="LMS Unpacker" Width="1120" Height="790" MinWidth="800" MinHeight="560" WindowStartupLocation="CenterScreen"
         Background="{DynamicResource {x:Static SystemColors.WindowBrushKey}}" Foreground="{DynamicResource {x:Static SystemColors.WindowTextBrushKey}}"
         FontFamily="Segoe UI" FontSize="14" AllowDrop="True">
+  <Window.TaskbarItemInfo><TaskbarItemInfo ProgressState="None"/></Window.TaskbarItemInfo>
   <Window.Resources>
     <Style TargetType="Button">
       <Setter Property="Padding" Value="14,9"/><Setter Property="MinHeight" Value="38"/><Setter Property="Margin" Value="0,0,8,0"/>
@@ -77,7 +78,18 @@
       </ScrollViewer>
       <Grid Grid.Column="2"><Grid.RowDefinitions><RowDefinition Height="Auto"/><RowDefinition Height="Auto"/><RowDefinition Height="*"/><RowDefinition Height="Auto"/></Grid.RowDefinitions>
         <DockPanel><Button x:Name="UndoButton" Content="_History / undo…" DockPanel.Dock="Right" Margin="8,0,0,0"/><Button x:Name="ClassifyButton" Content="Add rule for selected file…" DockPanel.Dock="Right"/><TextBlock Text="2  Review" FontSize="19" FontWeight="SemiBold" VerticalAlignment="Center"/></DockPanel>
-        <StackPanel Grid.Row="1"><TextBlock x:Name="SummaryText" Text="Choose your materials, then preview. Nothing changes until you apply." TextWrapping="Wrap" Margin="0,10,0,4" AutomationProperties.LiveSetting="Polite"/><CheckBox x:Name="UnclassifiedOnly" Content="Show only unclassified files" Margin="0,4,0,8"/></StackPanel>
+        <StackPanel Grid.Row="1">
+          <Border x:Name="FeedbackPanel" BorderBrush="{DynamicResource {x:Static SystemColors.ActiveBorderBrushKey}}" BorderThickness="1" CornerRadius="8" Padding="12" Margin="0,10,0,4">
+            <StackPanel>
+              <TextBlock x:Name="FeedbackTitle" Text="Ready to preview" FontSize="19" FontWeight="SemiBold" TextWrapping="Wrap" AutomationProperties.LiveSetting="Polite"/>
+              <TextBlock x:Name="SummaryText" Text="Choose your materials, then preview. Nothing changes until you apply." TextWrapping="Wrap" Margin="0,6,0,4"/>
+              <TextBlock x:Name="WorkItemText" TextTrimming="CharacterEllipsis" ToolTip="{Binding Text, RelativeSource={RelativeSource Self}}"/>
+              <ProgressBar x:Name="BusyProgress" IsIndeterminate="False" Maximum="100" Height="9" Margin="0,8,0,0" Visibility="Collapsed" AutomationProperties.Name="Progress within the current phase, not overall queue progress"/>
+              <Button x:Name="ResultOpenButton" Content="_Open result folder" Visibility="Collapsed" HorizontalAlignment="Left" Margin="0,10,0,0"/>
+            </StackPanel>
+          </Border>
+          <CheckBox x:Name="UnclassifiedOnly" Content="Show only unclassified files" Margin="0,4,0,8"/>
+        </StackPanel>
         <TabControl Grid.Row="2" x:Name="ResultsTabs" AutomationProperties.Name="Preview and activity">
           <TabItem Header="_File destinations"><DataGrid x:Name="PlanGrid" AutoGenerateColumns="False" IsReadOnly="True" CanUserAddRows="False" CanUserDeleteRows="False" SelectionMode="Extended" EnableRowVirtualization="True" GridLinesVisibility="Horizontal" HeadersVisibility="Column" AutomationProperties.Name="Planned file destinations and reasons">
             <DataGrid.RowStyle><Style TargetType="DataGridRow"><Setter Property="ToolTip" Value="{Binding FullDestination}"/></Style></DataGrid.RowStyle>
@@ -90,7 +102,7 @@
       </Grid>
     </Grid>
     <Grid Grid.Row="3" Margin="0,16,0,0"><Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="Auto"/><ColumnDefinition Width="Auto"/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions>
-      <StackPanel VerticalAlignment="Center" Margin="0,0,14,0"><TextBlock x:Name="StatusText" Text="Ready • Preview first" TextWrapping="Wrap" AutomationProperties.LiveSetting="Polite"/><ProgressBar x:Name="BusyProgress" IsIndeterminate="False" Maximum="100" Height="4" Margin="0,7,0,0" Visibility="Collapsed" AutomationProperties.Name="Current operation progress"/></StackPanel>
+      <StackPanel VerticalAlignment="Center" Margin="0,0,14,0"><TextBlock x:Name="StatusText" Text="Ready • Preview first" TextWrapping="Wrap"/></StackPanel>
       <Button Grid.Column="1" x:Name="OpenFolderButton" Content="Open selected folder" IsEnabled="False"/>
       <StackPanel Grid.Column="2" Orientation="Horizontal"><Button x:Name="CancelButton" Content="_Cancel safely" Visibility="Collapsed"/><Button x:Name="PreviewButton" Content="_Preview changes" FontWeight="SemiBold"/></StackPanel>
       <Button Grid.Column="3" x:Name="ApplyButton" Content="_Apply changes" FontWeight="SemiBold" IsEnabled="False" Padding="22,10" Margin="0"/>

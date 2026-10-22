@@ -28,7 +28,9 @@ try {
     Check-Desktop (-not $ui.ApplyButton.IsEnabled -and -not $ui.KeepZip.IsChecked -and $ui.ConflictChoice.SelectedIndex -eq 0) 'initial defaults'
     Make-DesktopZip (Join-Path $fixtureRoot 'download.zip') 'section/Lecture 1.pdf' 'fixture'
     Click-Control PreviewButton
+    Check-Desktop ($state.Busy -and $ui.FeedbackTitle.Text -eq 'Building your preview...' -and $ui.BusyProgress.IsIndeterminate -and $window.TaskbarItemInfo.ProgressState -eq 'Indeterminate') 'immediate preview feedback before worker finishes'
     Wait-Desktop
+    Check-Desktop ($ui.FeedbackTitle.Text -eq 'Preview ready - no files changed' -and $ui.ResultOpenButton.Visibility -eq 'Collapsed') 'preview must not look like completed extraction'
     Check-Desktop ($ui.ApplyButton.IsEnabled -and $ui.PlanGrid.Items.Count -eq 1) ('preview failed: ' + $ui.ActivityText.Text)
     if ($RenderPath) {
         $content = $window.Content
@@ -47,9 +49,19 @@ try {
     Check-Desktop (-not $ui.ApplyButton.IsEnabled) 'changing options did not invalidate preview'
     $ui.ConflictChoice.SelectedIndex = 0
     Click-Control PreviewButton; Wait-Desktop
-    Click-Control ApplyButton; Wait-Desktop
+    Click-Control ApplyButton
+    Check-Desktop ($state.Busy -and $ui.FeedbackTitle.Text -eq 'Unpacking your files...' -and $ui.ApplyButton.Content -eq 'Working...' -and -not $ui.OpenFolderButton.IsEnabled) 'immediate extraction feedback and disabled actions'
+    Wait-Desktop
     Check-Desktop ([IO.File]::Exists((Join-Path $fixtureRoot 'Lecture 1.pdf')) -and -not [IO.File]::Exists((Join-Path $fixtureRoot 'download.zip'))) ('apply failed: ' + $ui.ActivityText.Text)
     Check-Desktop (-not $ui.ApplyButton.IsEnabled) 'apply should require a fresh preview'
+    Check-Desktop ($ui.FeedbackTitle.Text -eq 'Done - your files are ready' -and $ui.SummaryText.Text -like '*Extracted: 1*permanently deleted*' -and $ui.ResultOpenButton.Visibility -eq 'Visible' -and $ui.BusyProgress.Visibility -eq 'Collapsed' -and $window.TaskbarItemInfo.ProgressState -eq 'None') 'persistent completion summary, result action and stopped progress'
+    if ($RenderPath) {
+        $window.Content.UpdateLayout()
+        $bitmap=[Windows.Media.Imaging.RenderTargetBitmap]::new(1072,704,96,96,[Windows.Media.PixelFormats]::Pbgra32)
+        $bitmap.Render($window.Content)
+        $encoder=[Windows.Media.Imaging.PngBitmapEncoder]::new(); $encoder.Frames.Add([Windows.Media.Imaging.BitmapFrame]::Create($bitmap))
+        $imageFile=[IO.File]::Create($RenderPath+'.done.png'); try { $encoder.Save($imageFile) } finally { $imageFile.Dispose() }
+    }
     Write-Host 'PASS: Desktop preview, setting invalidation, default extraction and ZIP deletion'; $desktopPassed++
 
     Make-DesktopZip (Join-Path $fixtureRoot 'structure.zip') 'nested/linked.txt' 'fixture'
@@ -59,6 +71,7 @@ try {
     Click-Control PreviewButton; Wait-Desktop
     Click-Control ApplyButton; Wait-Desktop
     Check-Desktop ([IO.File]::Exists((Join-Path $fixtureRoot 'structure\nested\linked.txt')) -and [IO.File]::Exists((Join-Path $fixtureRoot 'structure.zip'))) 'just-unzip or keep ZIP failed'
+    Check-Desktop ($ui.SummaryText.Text -like '*Source ZIPs were kept*') 'completion must report chosen archive retention'
     Write-Host 'PASS: Desktop just-unzip preserves hierarchy and optional source ZIP'; $desktopPassed++
 
     $calculus = Join-Path $fixtureRoot 'Calculus'
@@ -98,6 +111,7 @@ try {
     $ui.TaskChoice.SelectedIndex = 0
     Click-Control PreviewButton; Wait-Desktop
     Check-Desktop (-not $ui.ApplyButton.IsEnabled -and $ui.ResultsTabs.SelectedIndex -eq 1 -and $ui.ActivityText.Text -match 'ERROR') 'archive error not surfaced'
+    Check-Desktop ($ui.FeedbackTitle.Text -like 'Needs attention*' -and $ui.ResultOpenButton.Visibility -eq 'Collapsed' -and $window.TaskbarItemInfo.ProgressState -eq 'Error') 'errors must never show success feedback'
     Check-Desktop ([IO.File]::Exists($ui.InputPath.Text)) 'failed ZIP was deleted'
     Write-Host 'PASS: Desktop errors keep ZIPs and disable Apply'; $desktopPassed++
     $queueA=Join-Path $fixtureRoot 'queue-a.zip'; $queueB=Join-Path $fixtureRoot 'queue-b.zip'
@@ -151,12 +165,22 @@ try {
     Click-Control CancelButton
     Wait-Desktop
     Check-Desktop (-not $ui.ApplyButton.IsEnabled -and $ui.StatusText.Text -like 'Cancelled safely*' -and [IO.File]::Exists($queueB)) ('safe cancellation failed: '+$ui.ActivityText.Text)
+    Check-Desktop ($ui.FeedbackTitle.Text -like 'Stopped safely*' -and $ui.SummaryText.Text -like '*Unprocessed ZIPs were kept*') 'cancellation needs distinct completion feedback'
     Write-Host 'PASS: Cancel queue cooperatively and retain unprocessed ZIPs'; $desktopPassed++
 
     Set-SelectedPaths @($fixtureRoot,$queueB)
     Click-Control PreviewButton; Wait-Desktop
     Check-Desktop (-not $ui.ApplyButton.IsEnabled -and $ui.ActivityText.Text -match 'overlap') 'overlapping queue scopes must fail before apply'
     Write-Host 'PASS: Overlapping queue paths rejected before mutation'; $desktopPassed++
+    $state.Elapsed=[Diagnostics.Stopwatch]::StartNew(); $state.LastFeedback=-1000; $state.Operation='Apply'
+    $state.Control=@{CancelRequested=$false; Phase='Writing verified files'; Current='lecture.pdf'; Completed=2; Total=4; QueueIndex=1; QueueTotal=2; ArchiveIndex=2; ArchiveTotal=3}
+    Update-Feedback
+    Check-Desktop ($ui.SummaryText.Text -like '*Input 1 of 2*ZIP 2 of 3*2 of 4 entries in this phase*Elapsed*' -and $ui.WorkItemText.Text -eq 'lecture.pdf' -and $window.TaskbarItemInfo.ProgressValue -eq 0.5) 'current phase progress must not pretend to be whole queue completion'
+    $state.Elapsed.Stop(); Reset-Feedback
+    Complete-Feedback ([pscustomobject]@{Preview=$true; Cancelled=$true})
+    Check-Desktop ($ui.FeedbackTitle.Text -eq 'Preview stopped - no files changed' -and $ui.ResultOpenButton.Visibility -eq 'Collapsed') 'cancelled preview must not claim files were changed'
+    Reset-Feedback
+    Write-Host 'PASS: Phase progress, taskbar state, elapsed time and completion feedback'; $desktopPassed++
     Write-Host "All $desktopPassed desktop flow tests passed."
 } finally {
     if ($state.Busy -and $state.Worker) { $state.Worker.Stop(); $state.Worker.Dispose(); $state.Busy = $false }

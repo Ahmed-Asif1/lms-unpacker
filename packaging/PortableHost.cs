@@ -11,7 +11,7 @@ using System.Windows.Forms;
 [assembly: AssemblyDescription("Portable offline ZIP extraction and course organization")]
 [assembly: AssemblyCompany("LMS Unpacker contributors")]
 [assembly: AssemblyProduct("LMS Unpacker")]
-[assembly: AssemblyVersion("1.3.0.0")]
+[assembly: AssemblyVersion("1.3.1.0")]
 
 // Both editions carry the same offline payload. No installer or download at startup.
 internal static class PortableHost

@@ -1,5 +1,14 @@
 # Changelog
 
+## 1.3.1
+
+- Make work immediately visible with a prominent progress panel, current file and phase,
+  input/ZIP counts, elapsed time, and Windows taskbar progress.
+- Keep a completion panel with extracted/skipped/organized counts, ZIP retention outcome,
+  and an Open result folder action. Distinguish preview, cancellation and errors.
+- Report verified-file publication progress as well as archive-reading progress.
+- Add desktop checks for immediate, in-progress and terminal feedback states.
+
 ## 1.3.0
 
 - Add organization history discovery with record status and validated undo previews.
