@@ -14,6 +14,17 @@ function Invoke-DesktopCheck([string]$Executable) {
     } finally { $process.Dispose() }
 }
 try {
+    Add-Type -AssemblyName System.IO.Compression
+    foreach ($executable in @($CliPath,$DesktopPath)) {
+        $hostAssembly=[Reflection.Assembly]::Load([IO.File]::ReadAllBytes($executable))
+        $payloadStream=$hostAssembly.GetManifestResourceStream('App.zip')
+        $payload=[IO.Compression.ZipArchive]::new($payloadStream,[IO.Compression.ZipArchiveMode]::Read)
+        try {
+            $names=@($payload.Entries | ForEach-Object { $_.FullName })
+            Assert-Release ($names -contains 'LMS-Unpacker/START-HERE.html') 'offline user tutorial missing'
+            Assert-Release (-not @($names | Where-Object { $_ -match '(?i)(BUILD-IT-YOURSELF\.html|CODE-REFERENCE\.html|Build-CodeReference\.ps1|(^|/)(AGENT|AGENTS)\.md)$' }).Count) 'local learning files or agent notes leaked into executable'
+        } finally { $payload.Dispose(); $payloadStream.Dispose() }
+    }
     $onlyFiles = Join-Path $releaseRoot 'Only these files & spaces'
     $null = [IO.Directory]::CreateDirectory($onlyFiles)
     Copy-Item -LiteralPath $CliPath -Destination $onlyFiles

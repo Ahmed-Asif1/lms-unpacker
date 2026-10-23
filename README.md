@@ -6,10 +6,6 @@ app and Windows/Linux CLI with three jobs: **flatten downloads**, **just unzip**
 [Downloads](docs/DOWNLOADS.md) · [Privacy policy](PRIVACY.md) ·
 [Code signing policy](docs/SIGNING.md) · [Contributing](CONTRIBUTING.md) · [Roadmap](docs/ROADMAP.md)
 
-Want to understand or rebuild it? Open the offline [illustrated engineering handbook](docs/BUILD-IT-YOURSELF.html)
-and [every-file/function reference](docs/CODE-REFERENCE.html). Download these HTML files to read them in a browser;
-the desktop's **Visual guide** also links to the embedded copies.
-
 **Defaults: flatten, skip existing filenames, delete successfully processed ZIPs.**
 When a filename already exists, its incoming version is discarded even if its content
 is different. Choose **Rename** to keep both versions, or **Keep ZIP** to retain the
@@ -332,7 +328,6 @@ From a repository checkout (the optional modular runtime ZIP omits build tools/t
 pwsh -NoProfile -File .\Build-Linux.ps1
 ```
 
-Regenerate the public source reference with `powershell.exe -NoProfile -ExecutionPolicy Bypass -File .\tools\Build-CodeReference.ps1`.
 After a full build, run `powershell.exe -NoProfile -ExecutionPolicy Bypass -File .\tools\Clean-Workspace.ps1`
 to preview known generated clutter; add `-Apply` after reviewing it. The cleaner preserves
 current checksum-verified deliverables, newer packages and unknown files. Close active builds/tests first.
@@ -341,7 +336,7 @@ The test suite uses temporary fixtures inside `tests/.runs`, including malicious
 paths, CRC failures, conflicts, grouping, course profiles, undo, and junctions. It never
 uses personal course documents. The release builder runs the engine and real WPF-control
 tests, then builds `dist/LMS-Unpacker.exe`, `dist/LMS-Unpacker-CLI.exe`, and the optional
-`dist/LMS-Unpacker-1.4.1.zip` from an explicit file list. It checks both standalone
+`dist/LMS-Unpacker-1.4.2.zip` from an explicit file list. It checks both standalone
 executables, CLI behavior, a shortcut in an isolated test folder, and temporary cleanup.
 Each artifact gets a SHA-256 checksum. Existing versioned ZIPs are not overwritten;
 the stable EXE filenames are refreshed when a new release is built. GitHub Actions runs tests on Windows PowerShell 5.1

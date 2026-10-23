@@ -1,5 +1,11 @@
 # Changelog
 
+## 1.4.2
+
+- Keep the personal build walkthrough, generated source reference and reference generator local and ignored.
+- Exclude those developer learning materials from Windows/Linux downloads; retain the offline user tutorial.
+- Remove public links and CI dependencies on the local learning files.
+
 ## 1.4.1
 
 - Separate Task, Workspace and App settings; compact header and fixed settings heading.

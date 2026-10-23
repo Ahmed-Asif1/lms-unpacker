@@ -9,6 +9,15 @@ app="$fixture/standalone & spaces/unpacker.sh"
 bash -n "$app"
 bash "$app" --help
 export LMS_TEST_ROOT="$fixture"
+awk 'payload { print } /^__LMS_PAYLOAD__$/ { payload=1 }' "$app" | base64 --decode > "$fixture/payload.zip"
+pwsh -NoProfile -Command '
+  $zip=[IO.Compression.ZipFile]::OpenRead((Join-Path $env:LMS_TEST_ROOT "payload.zip"))
+  try {
+    $names=@($zip.Entries | ForEach-Object { $_.FullName })
+    if ("START-HERE.html" -notin $names) { throw "Offline user tutorial missing" }
+    if (@($names | Where-Object { $_ -match "(?i)(BUILD-IT-YOURSELF\.html|CODE-REFERENCE\.html|Build-CodeReference\.ps1|(^|/)(AGENT|AGENTS)\.md)$" }).Count) { throw "Local learning files leaked into Linux payload" }
+  } finally { $zip.Dispose() }
+'
 pwsh -NoProfile -Command '
   $zip=[IO.Compression.ZipFile]::Open((Join-Path $env:LMS_TEST_ROOT "sample.zip"),"Create")
   try { $writer=[IO.StreamWriter]::new($zip.CreateEntry("nested/hello.txt").Open()); $writer.Write("hello"); $writer.Dispose() } finally { $zip.Dispose() }

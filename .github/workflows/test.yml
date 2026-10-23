@@ -26,11 +26,6 @@ jobs:
       - name: Generated-clutter cleanup checks
         shell: powershell
         run: ./tests/Test-Cleanup.ps1
-      - name: Keep source reference current
-        shell: powershell
-        run: |
-          ./tools/Build-CodeReference.ps1
-          git diff --exit-code -- docs/CODE-REFERENCE.html
   linux:
     runs-on: ubuntu-latest
     steps:
