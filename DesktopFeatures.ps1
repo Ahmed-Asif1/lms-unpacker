@@ -67,6 +67,7 @@ $ui.QueueList.Add_PreviewKeyDown({ param($sender,$event)
 })
 $ui.PlanGrid.Add_SelectionChanged({
     $row=$ui.PlanGrid.SelectedItem
+    $ui.ClassifyButton.IsEnabled=-not $state.Busy -and $ui.TaskChoice.SelectedIndex -ge 2 -and $null -ne $row
     if (-not $row) { $ui.FileDetails.Text='Select a row in File destinations to inspect it.'; return }
     $size=if ($null -ne $row.Bytes) { [string]$row.Bytes+' bytes' } else { 'Not applicable' }
     $comparison=if ($row.Comparison) { $row.Comparison } else { 'No filename conflict was found, or content comparison was not applicable.' }
@@ -77,6 +78,7 @@ $ui.SaveWorkspaceButton.Add_Click({
         $name=$ui.WorkspaceName.Text.Trim()
         if (-not $name) { throw 'Enter a workspace name first.' }
         $state.Workspaces=@($state.Workspaces | Where-Object { $_.Name -ne $name }) + @(Get-WorkspaceSnapshot $name)
+        Update-WorkspaceHints
         Save-Preferences
         $ui.WorkspaceChoice.ItemsSource=@($state.Workspaces)
         $ui.StatusText.Text='Workspace saved locally. Select it next time to restore paths and settings.'
@@ -92,6 +94,7 @@ $ui.RemoveWorkspaceButton.Add_Click({
 $ui.WorkspaceChoice.Add_SelectionChanged({ if ($ui.WorkspaceChoice.SelectedItem) { try { Restore-Workspace $ui.WorkspaceChoice.SelectedItem } catch { Show-Problem $_.Exception.Message } } })
 $ui.OutputBrowseButton.Add_Click({
     $dialog=[Windows.Forms.FolderBrowserDialog]::new(); $dialog.Description='Choose where ZIP contents will be written'; $dialog.ShowNewFolderButton=$true
+    $dialog.SelectedPath=Get-LmsPickerFolder $ui.OutputPath.Text (Get-LmsPickerFolder $state.LastFolderPicker $state.LaunchFolder)
     try { if ($dialog.ShowDialog() -eq 'OK') { $ui.OutputPath.Text=$dialog.SelectedPath } } finally { $dialog.Dispose() }
 })
 $ui.EditProfileButton.Add_Click({ try { Edit-SelectedProfile $null } catch { Show-Problem $_.Exception.Message } })
@@ -104,6 +107,3 @@ $ui.ClassifyButton.Add_Click({
         Edit-SelectedProfile $seed
     } catch { Show-Problem $_.Exception.Message }
 })
-if (-not $SmokeTest -and [IO.File]::Exists($preferences)) {
-    try { $savedPreferences=Get-Content -LiteralPath $preferences -Raw -Encoding UTF8 | ConvertFrom-Json; $state.Workspaces=@($savedPreferences.Workspaces | Where-Object { $_ -and $_.Name }); $ui.WorkspaceChoice.ItemsSource=@($state.Workspaces) } catch { $state.Workspaces=@() }
-}

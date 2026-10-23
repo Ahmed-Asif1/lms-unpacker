@@ -401,6 +401,29 @@ function Invoke-LmsOrganization($Files, [string]$Root, $Options, $Profile, [hash
     return [pscustomobject]@{Moved=$moved; Journal=$journalPath; Unclassified=$unclassified; Details=$details.ToArray()}
 }
 
+function Get-LmsScanFiles($InputItem, [int]$Depth) {
+    Assert-PlainPath $InputItem.FullName
+    if (-not $InputItem.PSIsContainer) { return $InputItem }
+    $folders = @($InputItem)
+    if ($Depth -eq 1) {
+        $protected = @('Lab','Labs','submission','submissions','templates','Practice','needed','Syllabi','Lectures','Assignments','Quizzes and Exams','Books','Course Info','evidence','ScreenShots','node_modules')
+        $folders += @(Get-ChildItem -LiteralPath $InputItem.FullName -Directory | Where-Object {
+            $_.Name -notin $protected -and -not $_.Name.StartsWith('.') -and -not ($_.Attributes -band [IO.FileAttributes]::ReparsePoint)
+        })
+    }
+    foreach ($folder in $folders) {
+        Get-ChildItem -LiteralPath $folder.FullName -File | Where-Object { -not ($_.Attributes -band [IO.FileAttributes]::ReparsePoint) }
+    }
+}
+
+function Find-LmsArchives {
+    [CmdletBinding()]
+    param([Parameter(Mandatory)][string]$Path, [ValidateRange(0,1)][int]$Depth=1)
+    $inputItem=Get-Item -LiteralPath $Path -Force -ErrorAction Stop
+    if (-not $inputItem.PSObject.Properties['FullName']) { throw 'Choose a filesystem folder or ZIP.' }
+    Get-LmsScanFiles $inputItem $Depth | Where-Object { $_.Extension -eq '.zip' } | Sort-Object FullName
+}
+
 function Invoke-LmsUnpacker {
     [CmdletBinding()]
     param(
@@ -431,18 +454,9 @@ function Invoke-LmsUnpacker {
     $inputItem = Get-Item -LiteralPath $Path -Force -ErrorAction Stop
     if (-not $inputItem -or -not $inputItem.PSObject.Properties['FullName']) { throw "Choose a filesystem folder or ZIP: $Path" }
     Assert-PlainPath $inputItem.FullName
-    $files = @()
+    $files = @(Get-LmsScanFiles $inputItem $Depth)
     $root = $inputItem.FullName
-    if ($inputItem.PSIsContainer) {
-        $folders = @($inputItem)
-        if ($Depth -eq 1) {
-            $protected = @('Lab','Labs','submission','submissions','templates','Practice','needed','Syllabi','Lectures','Assignments','Quizzes and Exams','Books','Course Info','evidence','ScreenShots','node_modules')
-            $folders += @(Get-ChildItem -LiteralPath $root -Directory | Where-Object {
-                $_.Name -notin $protected -and -not $_.Name.StartsWith('.') -and -not ($_.Attributes -band [IO.FileAttributes]::ReparsePoint)
-            })
-        }
-        foreach ($folder in $folders) { $files += @(Get-ChildItem -LiteralPath $folder.FullName -File | Where-Object { -not ($_.Attributes -band [IO.FileAttributes]::ReparsePoint) }) }
-    } else {
+    if (-not $inputItem.PSIsContainer) {
         if ($OrganizeExisting -or $ExistingOnly) { throw 'Existing-file organization requires a folder.' }
         if ($inputItem.Extension -ne '.zip') { throw 'Choose a folder or a .zip file.' }
         $files = @($inputItem)
@@ -550,4 +564,4 @@ function Test-LmsProfile {
     return $true
 }
 
-Export-ModuleMember -Function Invoke-LmsUnpacker, Undo-LmsOrganization, Test-LmsProfile
+Export-ModuleMember -Function Invoke-LmsUnpacker, Undo-LmsOrganization, Test-LmsProfile, Find-LmsArchives

@@ -30,6 +30,8 @@ jobs:
       - name: Portable engine tests on Linux
         shell: pwsh
         run: ./tests/Test-Portable.ps1
+      - name: Offline visual guide checks
+        run: node tests/Test-Guide.js
       - name: Build standalone Linux launcher
         shell: pwsh
         run: ./Build-Linux.ps1

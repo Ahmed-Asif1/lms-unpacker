@@ -14,14 +14,27 @@ try {
         'CreateProfileButton','GroupChoice','GroupHint','ConflictChoice','KeepZip','ScanChildren','DefaultsNotice','PreviewButton','UndoButton',
         'SummaryText','ResultsTabs','PlanGrid','ActivityText','JournalText','StatusText','BusyProgress','OpenFolderButton','ApplyButton',
         'WorkspaceChoice','WorkspaceName','SaveWorkspaceButton','RemoveWorkspaceButton','QueueList','QueueAddButton','QueueClearButton','QueueFirstButton','QueueRemoveButton','QueueUpButton','QueueDownButton','FileDetails',
-        'EditProfileButton','ClassifyButton','OutputPath','OutputBrowseButton','CancelButton','UnclassifiedOnly','QueueExpander','FeedbackPanel','FeedbackTitle','WorkItemText','ResultOpenButton')) {
+        'EditProfileButton','ClassifyButton','OutputPath','OutputBrowseButton','CancelButton','UnclassifiedOnly','QueueExpander','FeedbackPanel','FeedbackTitle','WorkItemText','ResultOpenButton',
+        'WorkspaceExpander','OptionsExpander','AppExpander','ReviewTools','DiscoveryText','AppFolderButton','RescanButton','ArchivesTab','ArchiveGrid','UseDetectedButton')) {
         $ui[$name] = $window.FindName($name)
         if (-not $ui[$name]) { throw "Missing interface control: $name" }
     }
-    $state = @{ Busy=$false; Preview=$null; Operation=$null; Worker=$null; Handle=$null; InformationIndex=0; UndoPath=$null; Workspaces=@() }
+    $state = @{ Busy=$false; Preview=$null; Operation=$null; Worker=$null; Handle=$null; InformationIndex=0; UndoPath=$null; Workspaces=@(); LastFolderPicker=''; LastZipPicker=''; DiscoveryVersion=0; DiscoveryWorker=$null; DiscoveryPending=$null }
     $preferences = Join-Path ([Environment]::GetFolderPath('LocalApplicationData')) 'LMS Unpacker\preferences.json'
     $shortcut = Join-Path ([Environment]::GetFolderPath('Programs')) 'LMS Unpacker.lnk'
     $appExe = $env:LMS_APP_EXE
+    Import-Module (Join-Path $PSScriptRoot 'DesktopPaths.psm1') -Force
+    $state.LaunchFolder=Get-LmsLaunchFolder $appExe (Get-Location).Path
+    $savedPreferences=$null
+    if (-not $SmokeTest -and [IO.File]::Exists($preferences)) {
+        try {
+            $savedPreferences=Get-Content -LiteralPath $preferences -Raw -Encoding UTF8 | ConvertFrom-Json
+            $state.Workspaces=@($savedPreferences.Workspaces | Where-Object { $_ -and $_.Name })
+            $state.LastFolderPicker=if ($savedPreferences.LastFolderPicker) { $savedPreferences.LastFolderPicker } else { $savedPreferences.Path }
+            $state.LastZipPicker=if ($savedPreferences.LastZipPicker) { $savedPreferences.LastZipPicker } else { $savedPreferences.Path }
+            $ui.WorkspaceChoice.ItemsSource=@($state.Workspaces)
+        } catch { $state.Workspaces=@() }
+    }
     $window.Width = [Math]::Min(1120,[Windows.SystemParameters]::WorkArea.Width - 30)
     $window.Height = [Math]::Min(790,[Windows.SystemParameters]::WorkArea.Height - 30)
     if (-not [Windows.SystemParameters]::HighContrast) {
@@ -38,9 +51,12 @@ try {
         $null = [Windows.MessageBox]::Show($window,$Message,'LMS Unpacker','OK','Warning')
     }
     function Update-Hints {
-        $ui.QueueExpander.Header = 'Workspaces / queue (' + $ui.QueueList.Items.Count + ')'
+        $ui.QueueExpander.Header = 'Additional inputs (' + $ui.QueueList.Items.Count + ')'
         $organize = $ui.TaskChoice.SelectedIndex -ge 2
         $ui.OrganizationPanel.Visibility = if ($organize) { 'Visible' } else { 'Collapsed' }
+        $ui.ReviewTools.Visibility = if ($organize -and $ui.PlanGrid.ItemsSource) { 'Visible' } else { 'Collapsed' }
+        $ui.PlanGrid.Columns[4].Visibility=if ($organize) { 'Visible' } else { 'Collapsed' }
+        $ui.PlanGrid.Columns[3].Visibility=if (@($ui.PlanGrid.ItemsSource | Where-Object { $_.Comparison }).Count) { 'Visible' } else { 'Collapsed' }
         $ui.CustomProfilePanel.Visibility = if ($ui.ProfileChoice.SelectedIndex -eq 2) { 'Visible' } else { 'Collapsed' }
         $ui.KeepZip.IsEnabled = $ui.TaskChoice.SelectedIndex -ne 3
         $ui.OutputPath.IsEnabled = $ui.TaskChoice.SelectedIndex -ne 3
@@ -64,11 +80,13 @@ try {
         $ui.ApplyButton.IsEnabled = $false
         $ui.ApplyButton.Content = '_Apply changes'
         $ui.PlanGrid.ItemsSource = $null
+        $ui.ClassifyButton.IsEnabled=$false
         $ui.SummaryText.Text = 'Selection or settings changed. Preview to see the current plan.'
         $ui.StatusText.Text = 'Ready • Preview first'
         Reset-Feedback
         $ui.OpenFolderButton.IsEnabled = -not [string]::IsNullOrWhiteSpace($ui.InputPath.Text)
         Update-Hints
+        if (-not $state.UpdatingDiscovery) { Request-ZipDiscovery }
     }
     function Get-Options {
         $selectedPath = $ui.InputPath.Text.Trim().Trim('"')
@@ -94,6 +112,8 @@ try {
         $ui.PathPanel.IsEnabled = -not $Busy
         $ui.SettingsPanel.IsEnabled = -not $Busy
         foreach ($name in @('UndoButton','StartMenuButton','RemoveShortcutButton','ClassifyButton','PreviewButton')) { $ui[$name].IsEnabled = -not $Busy }
+        $ui.ClassifyButton.IsEnabled = -not $Busy -and $ui.TaskChoice.SelectedIndex -ge 2 -and $null -ne $ui.PlanGrid.SelectedItem
+        $ui.UseDetectedButton.IsEnabled = -not $Busy -and $ui.ArchiveGrid.SelectedItems.Count -gt 0
         $ui.CancelButton.Visibility = if ($Busy -and $state.Operation -notlike 'Undo*') { 'Visible' } else { 'Collapsed' }
         $ui.CancelButton.IsEnabled = $true
         $ui.ApplyButton.IsEnabled = $false
@@ -107,7 +127,7 @@ try {
             $null = [IO.Directory]::CreateDirectory([IO.Path]::GetDirectoryName($preferences))
             $remember = $ui.InputPath.Text.Trim().Trim('"')
             if (-not [IO.Directory]::Exists($remember)) { $remember = [IO.Path]::GetDirectoryName($remember) }
-            [IO.File]::WriteAllText($preferences,(@{Path=$remember; Workspaces=@($state.Workspaces)} | ConvertTo-Json -Depth 8),[Text.UTF8Encoding]::new($false))
+            [IO.File]::WriteAllText($preferences,(@{Path=$remember; Workspaces=@($state.Workspaces | Select-Object * -ExcludeProperty Hint); LastFolderPicker=$state.LastFolderPicker; LastZipPicker=$state.LastZipPicker} | ConvertTo-Json -Depth 8),[Text.UTF8Encoding]::new($false))
         } catch { $ui.ActivityText.AppendText("Could not remember the last path: $($_.Exception.Message)`r`n") }
     }
     function Start-Work([string]$Operation, [hashtable]$Options, [string]$UndoPath) {
@@ -214,7 +234,9 @@ try {
                     [pscustomobject]@{ Action=$_.Action; File=[IO.Path]::GetFileName($_.Source); Source=$_.Source; Course=$_.Course; Destination=$relative; FullDestination=$destination; Reason=$_.Reason; Comparison=$_.Comparison; ComparisonLabel=$comparisonLabel; Bytes=$_.Bytes; Archive=$_.Archive }
                 })
                 $ui.PlanGrid.ItemsSource = $rows
+                $ui.ResultsTabs.SelectedIndex=0
                 Update-ReviewFilter
+                Update-Hints
                 $prefix = if ($result.Preview) { 'Planned' } else { 'Completed' }
                 $ui.SummaryText.Text = "$prefix`: $($result.Archives) ZIPs; $($result.Written) extracted; $($result.Moved) organized; $($result.Skipped) skipped; $($result.Unclassified) unclassified."
                 if ($result.Journal) { $ui.JournalText.Text = 'Undo record: ' + $result.Journal; $ui.JournalText.Visibility = 'Visible' }
@@ -230,6 +252,7 @@ try {
             }
             if (-not $result.Preview -and -not $SmokeTest) { Save-Preferences }
             Complete-Feedback $result
+            if (-not $result.Preview) { Request-ZipDiscovery }
         } catch {
             $timer.Stop()
             $state.Preview = $null
@@ -247,6 +270,7 @@ try {
     . (Join-Path $PSScriptRoot 'DesktopFeatures.ps1')
     . (Join-Path $PSScriptRoot 'HistoryDialog.ps1')
     . (Join-Path $PSScriptRoot 'DesktopFeedback.ps1')
+    . (Join-Path $PSScriptRoot 'DesktopDiscovery.ps1')
     $ui.PreviewButton.Add_Click({ try { $state.UndoPath = $null; Start-Work 'Preview' (Get-Options) $null } catch { Show-Problem $_.Exception.Message } })
     $ui.ApplyButton.Add_Click({
         try {
@@ -256,15 +280,12 @@ try {
         } catch { Show-Problem $_.Exception.Message }
     })
     $ui.FolderButton.Add_Click({
-        $dialog = [Windows.Forms.FolderBrowserDialog]::new()
-        $dialog.Description = 'Choose the folder containing your ZIPs or course folders'
-        $dialog.ShowNewFolderButton = $false
-        try { if ($dialog.ShowDialog() -eq 'OK') { $ui.InputPath.Text = $dialog.SelectedPath } } finally { $dialog.Dispose() }
+        $dialog = New-InputFolderDialog
+        try { if ($dialog.ShowDialog() -eq 'OK') { $ui.InputPath.Text = $dialog.SelectedPath; Remember-PickerSelection 'Folder' $dialog.SelectedPath } } finally { $dialog.Dispose() }
     })
     $ui.ZipButton.Add_Click({
-        $dialog = [Microsoft.Win32.OpenFileDialog]::new()
-        $dialog.Title = 'Choose ZIPs'; $dialog.Filter = 'ZIP archives (*.zip)|*.zip'; $dialog.Multiselect=$true
-        if ($dialog.ShowDialog($window)) { Set-SelectedPaths $dialog.FileNames }
+        $dialog = New-InputZipDialog
+        if ($dialog.ShowDialog($window)) { Set-SelectedPaths $dialog.FileNames; Remember-PickerSelection 'Zip' $dialog.FileNames[0] }
     })
     $ui.ProfileBrowseButton.Add_Click({
         $dialog = [Microsoft.Win32.OpenFileDialog]::new()
@@ -340,20 +361,15 @@ try {
     $window.Add_Closing({ param($sender,$event)
         if ($state.Busy) { $event.Cancel = $true; $ui.StatusText.Text = 'Please wait for this operation to finish before closing.' }
     })
-    $window.Add_Closed({ $timer.Stop() })
+    $window.Add_Closed({ $timer.Stop(); $discoveryTimer.Stop(); if ($state.DiscoveryWorker) { $state.DiscoveryWorker.Stop(); $state.DiscoveryWorker.Dispose() } })
     if (-not $SmokeTest) {
         if (-not $Path -and $env:LMS_ARGUMENTS) {
             [string[]]$launchArgs = ([Text.Encoding]::UTF8.GetString([Convert]::FromBase64String($env:LMS_ARGUMENTS)) | ConvertFrom-Json)
             if ($launchArgs.Count -gt 1) { throw 'Open the desktop app with no arguments, or pass one folder or ZIP path.' }
             if ($launchArgs.Count -eq 1) { $Path = $launchArgs[0] }
         }
-        if (-not $Path -and [IO.File]::Exists($preferences)) {
-            try { $Path = (Get-Content -LiteralPath $preferences -Raw | ConvertFrom-Json).Path } catch { }
-        }
         if ([IO.File]::Exists($shortcut)) { $ui.RemoveShortcutButton.Visibility = 'Visible' }
     }
-    if ($Path) { $ui.InputPath.Text = $Path }
-    Update-Hints
     if ($Path -eq '--verify-startup') {
         Import-Module (Join-Path $PSScriptRoot 'LmsUnpacker.psm1') -Force
         Import-Module (Join-Path $PSScriptRoot 'DesktopIntegration.psm1') -Force
@@ -361,6 +377,12 @@ try {
         if (-not [IO.File]::Exists((Join-Path $PSScriptRoot 'START-HERE.html'))) { throw 'Embedded guide is missing.' }
         exit 0
     }
+    if (-not $SmokeTest) {
+        $startup=Get-LmsStartupSelection $Path $state.LaunchFolder $savedPreferences.Path
+        $ui.InputPath.Text=$startup.Path
+        Request-ZipDiscovery -StartupCandidates $startup.Candidates
+    } elseif ($Path) { $ui.InputPath.Text=$Path }
+    Update-Hints
     if ($SmokeTest) {
         # Real WPF controls and the asynchronous engine, without showing a window or launching external apps.
         & (Join-Path $PSScriptRoot 'tests\Test-Desktop.ps1')

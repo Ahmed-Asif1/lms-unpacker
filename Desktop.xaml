@@ -1,111 +1,283 @@
-<Window xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation" xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-        Title="LMS Unpacker" Width="1120" Height="790" MinWidth="800" MinHeight="560" WindowStartupLocation="CenterScreen"
-        Background="{DynamicResource {x:Static SystemColors.WindowBrushKey}}" Foreground="{DynamicResource {x:Static SystemColors.WindowTextBrushKey}}"
-        FontFamily="Segoe UI" FontSize="14" AllowDrop="True">
-  <Window.TaskbarItemInfo><TaskbarItemInfo ProgressState="None"/></Window.TaskbarItemInfo>
+<Window xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation" xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml" Title="LMS Unpacker" Width="1120" Height="790" MinWidth="800" MinHeight="560" WindowStartupLocation="CenterScreen" Background="{DynamicResource {x:Static SystemColors.WindowBrushKey}}" Foreground="{DynamicResource {x:Static SystemColors.WindowTextBrushKey}}" FontFamily="Segoe UI" FontSize="14" AllowDrop="True">
+  <Window.TaskbarItemInfo>
+    <TaskbarItemInfo ProgressState="None" />
+  </Window.TaskbarItemInfo>
   <Window.Resources>
     <Style TargetType="Button">
-      <Setter Property="Padding" Value="14,9"/><Setter Property="MinHeight" Value="38"/><Setter Property="Margin" Value="0,0,8,0"/>
-      <Setter Property="Background" Value="{DynamicResource {x:Static SystemColors.ControlBrushKey}}"/><Setter Property="BorderBrush" Value="{DynamicResource {x:Static SystemColors.ActiveBorderBrushKey}}"/>
-      <Setter Property="Template"><Setter.Value><ControlTemplate TargetType="Button"><Border x:Name="ButtonBorder" Background="{TemplateBinding Background}" BorderBrush="{TemplateBinding BorderBrush}" BorderThickness="1" CornerRadius="6" Padding="{TemplateBinding Padding}"><ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center" RecognizesAccessKey="True"/></Border><ControlTemplate.Triggers><Trigger Property="IsMouseOver" Value="True"><Setter TargetName="ButtonBorder" Property="BorderBrush" Value="{DynamicResource {x:Static SystemColors.HighlightBrushKey}}"/></Trigger><Trigger Property="IsKeyboardFocused" Value="True"><Setter TargetName="ButtonBorder" Property="BorderThickness" Value="3"/><Setter TargetName="ButtonBorder" Property="BorderBrush" Value="{DynamicResource {x:Static SystemColors.HighlightBrushKey}}"/></Trigger><Trigger Property="IsEnabled" Value="False"><Setter Property="Opacity" Value="0.5"/></Trigger></ControlTemplate.Triggers></ControlTemplate></Setter.Value></Setter>
+      <Setter Property="Padding" Value="12,8" />
+      <Setter Property="MinHeight" Value="38" />
+      <Setter Property="Margin" Value="0,0,8,0" />
+      <Setter Property="Background" Value="{DynamicResource {x:Static SystemColors.ControlBrushKey}}" />
+      <Setter Property="BorderBrush" Value="{DynamicResource {x:Static SystemColors.ActiveBorderBrushKey}}" />
+      <Setter Property="Template">
+        <Setter.Value>
+          <ControlTemplate TargetType="Button">
+            <Border x:Name="ButtonBorder" Background="{TemplateBinding Background}" BorderBrush="{TemplateBinding BorderBrush}" BorderThickness="1" CornerRadius="6" Padding="{TemplateBinding Padding}">
+              <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center" RecognizesAccessKey="True" />
+            </Border>
+            <ControlTemplate.Triggers>
+              <Trigger Property="IsMouseOver" Value="True">
+                <Setter TargetName="ButtonBorder" Property="BorderBrush" Value="{DynamicResource {x:Static SystemColors.HighlightBrushKey}}" />
+              </Trigger>
+              <Trigger Property="IsKeyboardFocused" Value="True">
+                <Setter TargetName="ButtonBorder" Property="BorderThickness" Value="3" />
+                <Setter TargetName="ButtonBorder" Property="BorderBrush" Value="{DynamicResource {x:Static SystemColors.HighlightBrushKey}}" />
+              </Trigger>
+              <Trigger Property="IsEnabled" Value="False">
+                <Setter Property="Opacity" Value="0.5" />
+              </Trigger>
+            </ControlTemplate.Triggers>
+          </ControlTemplate>
+        </Setter.Value>
+      </Setter>
     </Style>
-    <Style TargetType="TextBox"><Setter Property="Padding" Value="8"/><Setter Property="MinHeight" Value="36"/><Setter Property="VerticalContentAlignment" Value="Center"/></Style>
-    <Style TargetType="ComboBox"><Setter Property="MinHeight" Value="38"/><Setter Property="Padding" Value="8"/><Setter Property="HorizontalContentAlignment" Value="Stretch"/></Style>
-    <Style TargetType="CheckBox"><Setter Property="Margin" Value="0,9,0,9"/><Setter Property="VerticalContentAlignment" Value="Center"/></Style>
-    <Style x:Key="FieldLabel" TargetType="Label"><Setter Property="Padding" Value="0,14,0,6"/><Setter Property="FontWeight" Value="SemiBold"/></Style>
+    <Style TargetType="TextBox">
+      <Setter Property="Padding" Value="8" />
+      <Setter Property="MinHeight" Value="36" />
+      <Setter Property="VerticalContentAlignment" Value="Center" />
+    </Style>
+    <Style TargetType="ComboBox">
+      <Setter Property="MinHeight" Value="38" />
+      <Setter Property="Padding" Value="8" />
+      <Setter Property="HorizontalContentAlignment" Value="Stretch" />
+    </Style>
+    <Style TargetType="CheckBox">
+      <Setter Property="Margin" Value="0,9,0,9" />
+      <Setter Property="VerticalContentAlignment" Value="Center" />
+    </Style>
+    <Style x:Key="FieldLabel" TargetType="Label">
+      <Setter Property="Padding" Value="0,14,0,6" />
+      <Setter Property="FontWeight" Value="SemiBold" />
+    </Style>
+    <Style TargetType="ToolTip">
+      <Setter Property="MaxWidth" Value="370" />
+      <Setter Property="Padding" Value="10" />
+      <Setter Property="TextBlock.TextWrapping" Value="Wrap" />
+    </Style>
   </Window.Resources>
   <Grid Margin="24,18,24,18" Background="{Binding Background, RelativeSource={RelativeSource AncestorType=Window}}">
-    <Grid.RowDefinitions><RowDefinition Height="Auto"/><RowDefinition Height="Auto"/><RowDefinition Height="*"/><RowDefinition Height="Auto"/></Grid.RowDefinitions>
+    <Grid.RowDefinitions>
+      <RowDefinition Height="Auto" />
+      <RowDefinition Height="Auto" />
+      <RowDefinition Height="*" />
+      <RowDefinition Height="Auto" />
+    </Grid.RowDefinitions>
     <DockPanel Margin="0,0,0,18">
       <StackPanel DockPanel.Dock="Right" Orientation="Horizontal" VerticalAlignment="Center">
-        <Button x:Name="HelpButton" Content="_Visual guide" AutomationProperties.Name="Open the offline visual guide"/>
-        <Button x:Name="StartMenuButton" Content="Add to _Start menu"/>
-        <Button x:Name="RemoveShortcutButton" Content="Remove shortcut" Visibility="Collapsed"/>
+        <Button x:Name="HelpButton" Content="_Visual guide" AutomationProperties.Name="Open the offline visual guide" />
       </StackPanel>
-      <StackPanel><TextBlock Text="LMS Unpacker" FontSize="29" FontWeight="SemiBold"/><TextBlock Text="Unpack simply. Organize when you need to." Margin="0,3,8,0"/></StackPanel>
+      <StackPanel>
+        <TextBlock Text="LMS Unpacker" FontSize="29" FontWeight="SemiBold" />
+        <TextBlock Text="Unpack simply. Organize when you need to." Margin="0,3,8,0" />
+      </StackPanel>
     </DockPanel>
     <Border Grid.Row="1" BorderBrush="{DynamicResource {x:Static SystemColors.ActiveBorderBrushKey}}" BorderThickness="1" CornerRadius="8" Padding="14" Margin="0,0,0,18">
-      <Grid x:Name="PathPanel"><Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="Auto"/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions>
-        <Grid.RowDefinitions><RowDefinition Height="Auto"/><RowDefinition Height="Auto"/><RowDefinition Height="Auto"/></Grid.RowDefinitions>
-        <Label Content="_Your folder or ZIP" Target="{Binding ElementName=InputPath}" Padding="0,0,0,6" FontWeight="SemiBold"/>
-        <TextBox Grid.Row="1" x:Name="InputPath" AutomationProperties.Name="Selected folder or ZIP path" ToolTip="Drop one folder or ZIP anywhere in this window, use Browse, or paste a path."/>
-        <Button Grid.Row="1" Grid.Column="1" x:Name="FolderButton" Content="Choose _folder…" Margin="10,0,8,0"/>
-        <Button Grid.Row="1" Grid.Column="2" x:Name="ZipButton" Content="Choose _ZIP…" Margin="0"/>
-        <TextBlock Grid.Row="2" Grid.ColumnSpan="3" Text="Drop folders or ZIPs here. Multiple selections form a queue. Preview the whole queue before applying." Margin="0,8,0,0" TextWrapping="Wrap"/>
+      <Grid x:Name="PathPanel">
+        <Grid.ColumnDefinitions>
+          <ColumnDefinition Width="*" />
+          <ColumnDefinition Width="Auto" />
+          <ColumnDefinition Width="Auto" />
+        </Grid.ColumnDefinitions>
+        <Grid.RowDefinitions>
+          <RowDefinition Height="Auto" />
+          <RowDefinition Height="Auto" />
+          <RowDefinition Height="Auto" />
+        </Grid.RowDefinitions>
+        <Label Content="_Your folder or ZIP" Target="{Binding ElementName=InputPath}" Padding="0,0,0,6" FontWeight="SemiBold" />
+        <TextBox Grid.Row="1" x:Name="InputPath" AutomationProperties.Name="Selected folder or ZIP path" ToolTip="Drop one folder or ZIP anywhere in this window, use Browse, or paste a path." />
+        <Button Grid.Row="1" Grid.Column="1" x:Name="FolderButton" Content="Choose _folder…" Margin="10,0,8,0" />
+        <Button Grid.Row="1" Grid.Column="2" x:Name="ZipButton" Content="Choose _ZIP…" Margin="0" />
+        <DockPanel Grid.Row="2" Grid.ColumnSpan="3" Margin="0,7,0,0">
+          <StackPanel DockPanel.Dock="Right" Orientation="Horizontal">
+            <Button x:Name="AppFolderButton" Content="Use app folder" Padding="8,3" MinHeight="28" />
+            <Button x:Name="RescanButton" Content="Rescan" Padding="8,3" MinHeight="28" Margin="0" />
+          </StackPanel>
+          <TextBlock x:Name="DiscoveryText" Text="Drop folders or ZIPs here, or choose your materials." TextWrapping="Wrap" FontSize="12" VerticalAlignment="Center" Margin="0,0,8,0" AutomationProperties.LiveSetting="Polite" />
+        </DockPanel>
       </Grid>
     </Border>
-    <Grid Grid.Row="2"><Grid.ColumnDefinitions><ColumnDefinition Width="310"/><ColumnDefinition Width="18"/><ColumnDefinition Width="*"/></Grid.ColumnDefinitions>
+    <Grid Grid.Row="2">
+      <Grid.ColumnDefinitions>
+        <ColumnDefinition Width="285" />
+        <ColumnDefinition Width="18" />
+        <ColumnDefinition Width="*" />
+      </Grid.ColumnDefinitions>
       <ScrollViewer VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled">
         <StackPanel x:Name="SettingsPanel" Margin="0,0,10,8">
-          <Expander x:Name="QueueExpander" Header="Saved workspaces and queue" Margin="0,0,0,12">
+          <TextBlock Text="1  Choose a task" FontSize="18" FontWeight="SemiBold" />
+          <Label Content="_Task" Target="{Binding ElementName=TaskChoice}" Style="{StaticResource FieldLabel}" />
+          <ComboBox x:Name="TaskChoice" SelectedIndex="0" AutomationProperties.Name="Task">
+            <ComboBoxItem Content="Flatten ZIP downloads" />
+            <ComboBoxItem Content="Just unzip - keep original folders" />
+            <ComboBoxItem Content="Organize ZIPs and loose documents" />
+            <ComboBoxItem Content="Organize loose documents only" />
+          </ComboBox>
+          <TextBlock x:Name="TaskHint" TextWrapping="Wrap" Margin="0,9,0,2" FontSize="12" />
+          <StackPanel x:Name="OrganizationPanel" Visibility="Collapsed">
+            <Label Content="_Course profile" Target="{Binding ElementName=ProfileChoice}" Style="{StaticResource FieldLabel}" />
+            <ComboBox x:Name="ProfileChoice" SelectedIndex="0" AutomationProperties.Name="Course profile">
+              <ComboBoxItem Content="General — any courses" />
+              <ComboBoxItem Content="NUST Fall 2026 example" />
+              <ComboBoxItem Content="My JSON profile" />
+            </ComboBox>
+            <StackPanel x:Name="CustomProfilePanel" Visibility="Collapsed" Margin="0,8,0,0">
+              <TextBox x:Name="ProfilePath" AutomationProperties.Name="Custom JSON profile path" />
+              <Button x:Name="ProfileBrowseButton" Content="Choose profile…" Margin="0,5,0,0" />
+            </StackPanel>
+            <Button x:Name="EditProfileButton" Content="Edit courses and syllabus…" Margin="0,8,0,0" />
+            <Button x:Name="CreateProfileButton" Content="Import profile from CSV…" Margin="0,8,0,0" />
+            <Label Content="_Group lectures" Target="{Binding ElementName=GroupChoice}" Style="{StaticResource FieldLabel}" />
+            <ComboBox x:Name="GroupChoice" SelectedIndex="0" AutomationProperties.Name="Lecture grouping">
+              <ComboBoxItem Content="Categories only" />
+              <ComboBoxItem Content="By week, when known" />
+              <ComboBoxItem Content="By topic" />
+            </ComboBox>
+            <TextBlock x:Name="GroupHint" TextWrapping="Wrap" Margin="0,8,0,0" FontSize="12" />
+          </StackPanel>
+          <CheckBox x:Name="KeepZip" Content="_Keep ZIP after success" AutomationProperties.Name="Keep ZIP after success; unchecked means delete" />
+          <TextBlock x:Name="DefaultsNotice" TextWrapping="Wrap" Margin="0,4,0,14" FontSize="12" />
+          <Expander x:Name="OptionsExpander" Header="Extraction options" Margin="0,14,0,0">
             <StackPanel>
-              <ComboBox x:Name="WorkspaceChoice" DisplayMemberPath="Name" AutomationProperties.Name="Saved workspaces" Margin="0,8,0,0"/>
-              <TextBox x:Name="WorkspaceName" AutomationProperties.Name="New workspace name" ToolTip="Name for the current paths, queue and settings" Margin="0,6,0,0"/>
-              <WrapPanel Margin="0,6,0,8"><Button x:Name="SaveWorkspaceButton" Content="Save workspace"/><Button x:Name="RemoveWorkspaceButton" Content="Remove"/></WrapPanel>
-              <TextBlock Text="Additional queued paths"/>
-              <ListBox x:Name="QueueList" Height="90" AutomationProperties.Name="Additional queued folders and ZIPs"/>
-              <WrapPanel Margin="0,6,0,8"><Button x:Name="QueueAddButton" Content="Add current path"/><Button x:Name="QueueClearButton" Content="Clear queue"/></WrapPanel>
-              <WrapPanel><Button x:Name="QueueFirstButton" Content="Make first"/><Button x:Name="QueueRemoveButton" Content="Remove selected"/><Button x:Name="QueueUpButton" Content="Move up"/><Button x:Name="QueueDownButton" Content="Move down"/></WrapPanel>
-              <TextBlock Text="The path above runs first. With Skip, the first file with each name wins. Reorder here, then preview again." TextWrapping="Wrap" Margin="0,8,0,8"/>
+              <Label Content="Existing file_names" Target="{Binding ElementName=ConflictChoice}" Style="{StaticResource FieldLabel}" />
+              <ComboBox x:Name="ConflictChoice" SelectedIndex="0" AutomationProperties.Name="Existing filename policy">
+                <ComboBoxItem Content="Skip existing names (default)" />
+                <ComboBoxItem Content="Rename to keep different versions" />
+              </ComboBox>
+              <CheckBox x:Name="ScanChildren" Content="Include course folders (1 level)" IsChecked="True" />
+              <Label Content="ZIP _output folder (optional)" Target="{Binding ElementName=OutputPath}" Style="{StaticResource FieldLabel}" />
+              <TextBox x:Name="OutputPath" AutomationProperties.Name="ZIP output folder; blank means beside the archive" />
+              <Button x:Name="OutputBrowseButton" Content="Choose output folder…" Margin="0,6,0,0" />
+              <TextBlock Text="Blank keeps the current location. Loose documents are organized in place, with undo." TextWrapping="Wrap" Margin="0,6,0,0" />
             </StackPanel>
           </Expander>
-          <TextBlock Text="1  Choose what to do" FontSize="19" FontWeight="SemiBold"/>
-          <Label Content="_Task" Target="{Binding ElementName=TaskChoice}" Style="{StaticResource FieldLabel}"/>
-          <ComboBox x:Name="TaskChoice" SelectedIndex="0" AutomationProperties.Name="Task">
-            <ComboBoxItem Content="Flatten ZIP downloads"/><ComboBoxItem Content="Just unzip — keep original folders"/><ComboBoxItem Content="Organize ZIPs and loose documents"/><ComboBoxItem Content="Organize loose documents only"/>
-          </ComboBox>
-          <TextBlock x:Name="TaskHint" TextWrapping="Wrap" Margin="0,9,0,2"/>
-          <StackPanel x:Name="OrganizationPanel" Visibility="Collapsed">
-            <Label Content="_Course profile" Target="{Binding ElementName=ProfileChoice}" Style="{StaticResource FieldLabel}"/>
-            <ComboBox x:Name="ProfileChoice" SelectedIndex="0" AutomationProperties.Name="Course profile"><ComboBoxItem Content="General — any courses"/><ComboBoxItem Content="NUST Fall 2026 example"/><ComboBoxItem Content="My JSON profile"/></ComboBox>
-            <StackPanel x:Name="CustomProfilePanel" Visibility="Collapsed" Margin="0,8,0,0"><TextBox x:Name="ProfilePath" AutomationProperties.Name="Custom JSON profile path"/><Button x:Name="ProfileBrowseButton" Content="Choose profile…" Margin="0,5,0,0"/></StackPanel>
-            <Button x:Name="EditProfileButton" Content="Edit courses and syllabus…" Margin="0,8,0,0"/>
-            <Button x:Name="CreateProfileButton" Content="Import profile from CSV…" Margin="0,8,0,0"/>
-            <Label Content="_Group lectures" Target="{Binding ElementName=GroupChoice}" Style="{StaticResource FieldLabel}"/>
-            <ComboBox x:Name="GroupChoice" SelectedIndex="0" AutomationProperties.Name="Lecture grouping"><ComboBoxItem Content="Categories only"/><ComboBoxItem Content="By week, when known"/><ComboBoxItem Content="By topic"/></ComboBox>
-            <TextBlock x:Name="GroupHint" TextWrapping="Wrap" Margin="0,8,0,0"/>
-          </StackPanel>
-          <Label Content="Existing file_names" Target="{Binding ElementName=ConflictChoice}" Style="{StaticResource FieldLabel}"/>
-          <ComboBox x:Name="ConflictChoice" SelectedIndex="0" AutomationProperties.Name="Existing filename policy"><ComboBoxItem Content="Skip existing names (default)"/><ComboBoxItem Content="Rename to keep different versions"/></ComboBox>
-          <CheckBox x:Name="KeepZip" Content="_Keep ZIP after success" AutomationProperties.Name="Keep ZIP after success; unchecked means delete"/>
-          <CheckBox x:Name="ScanChildren" Content="Include immediate course folders" IsChecked="True"/>
-          <TextBlock x:Name="DefaultsNotice" TextWrapping="Wrap" Margin="0,4,0,14"/>
-          <Label Content="ZIP _output folder (optional)" Target="{Binding ElementName=OutputPath}" Style="{StaticResource FieldLabel}"/>
-          <TextBox x:Name="OutputPath" AutomationProperties.Name="ZIP output folder; blank means beside the archive"/>
-          <Button x:Name="OutputBrowseButton" Content="Choose output folder…" Margin="0,6,0,0"/>
-          <TextBlock Text="Blank keeps the current location. Loose documents are organized in place, with undo." TextWrapping="Wrap" Margin="0,6,0,0"/>
+          <Expander x:Name="WorkspaceExpander" Header="Saved workspaces" Margin="0,12,0,0">
+            <StackPanel Margin="0,8,0,0">
+              <ComboBox x:Name="WorkspaceChoice" DisplayMemberPath="Name" AutomationProperties.Name="Saved workspaces" Margin="0,8,0,0" />
+              <TextBox x:Name="WorkspaceName" AutomationProperties.Name="New workspace name" ToolTip="Name for the current paths, queue and settings" Margin="0,6,0,0" />
+              <WrapPanel Margin="0,6,0,8">
+                <Button x:Name="SaveWorkspaceButton" Content="Save workspace" />
+                <Button x:Name="RemoveWorkspaceButton" Content="Remove" />
+              </WrapPanel>
+            </StackPanel>
+          </Expander>
+          <Expander x:Name="QueueExpander" Header="Additional inputs (0)" Margin="0,0,0,12">
+            <StackPanel>
+              <TextBlock Text="Additional queued paths" />
+              <ListBox x:Name="QueueList" Height="90" AutomationProperties.Name="Additional queued folders and ZIPs" />
+              <WrapPanel Margin="0,6,0,8">
+                <Button x:Name="QueueAddButton" Content="Add current" />
+                <Button x:Name="QueueClearButton" Content="Clear" />
+              </WrapPanel>
+              <WrapPanel>
+                <Button x:Name="QueueFirstButton" Content="Make first" />
+                <Button x:Name="QueueRemoveButton" Content="Remove" />
+                <Button x:Name="QueueUpButton" Content="Up" />
+                <Button x:Name="QueueDownButton" Content="Down" />
+              </WrapPanel>
+              <TextBlock Text="The path above runs first. With Skip, the first file with each name wins. Reorder here, then preview again." TextWrapping="Wrap" Margin="0,8,0,8" />
+            </StackPanel>
+          </Expander>
+          <Expander x:Name="AppExpander" Header="App settings" Margin="0,12,0,0">
+            <StackPanel Margin="0,8,0,0">
+              <Button x:Name="StartMenuButton" Content="Add to _Start menu" />
+              <Button x:Name="RemoveShortcutButton" Content="Remove shortcut" Visibility="Collapsed" />
+            </StackPanel>
+          </Expander>
         </StackPanel>
       </ScrollViewer>
-      <Grid Grid.Column="2"><Grid.RowDefinitions><RowDefinition Height="Auto"/><RowDefinition Height="Auto"/><RowDefinition Height="*"/><RowDefinition Height="Auto"/></Grid.RowDefinitions>
-        <DockPanel><Button x:Name="UndoButton" Content="_History / undo…" DockPanel.Dock="Right" Margin="8,0,0,0"/><Button x:Name="ClassifyButton" Content="Add rule for selected file…" DockPanel.Dock="Right"/><TextBlock Text="2  Review" FontSize="19" FontWeight="SemiBold" VerticalAlignment="Center"/></DockPanel>
+      <Grid Grid.Column="2">
+        <Grid.RowDefinitions>
+          <RowDefinition Height="Auto" />
+          <RowDefinition Height="Auto" />
+          <RowDefinition Height="*" />
+          <RowDefinition Height="Auto" />
+        </Grid.RowDefinitions>
+        <DockPanel>
+          <Button x:Name="UndoButton" Content="_History / undo…" DockPanel.Dock="Right" Margin="8,0,0,0" />
+          <TextBlock Text="2  Preview and results" FontSize="18" FontWeight="SemiBold" VerticalAlignment="Center" />
+        </DockPanel>
         <StackPanel Grid.Row="1">
           <Border x:Name="FeedbackPanel" BorderBrush="{DynamicResource {x:Static SystemColors.ActiveBorderBrushKey}}" BorderThickness="1" CornerRadius="8" Padding="12" Margin="0,10,0,4">
             <StackPanel>
-              <TextBlock x:Name="FeedbackTitle" Text="Ready to preview" FontSize="19" FontWeight="SemiBold" TextWrapping="Wrap" AutomationProperties.LiveSetting="Polite"/>
-              <TextBlock x:Name="SummaryText" Text="Choose your materials, then preview. Nothing changes until you apply." TextWrapping="Wrap" Margin="0,6,0,4"/>
-              <TextBlock x:Name="WorkItemText" TextTrimming="CharacterEllipsis" ToolTip="{Binding Text, RelativeSource={RelativeSource Self}}"/>
-              <ProgressBar x:Name="BusyProgress" IsIndeterminate="False" Maximum="100" Height="9" Margin="0,8,0,0" Visibility="Collapsed" AutomationProperties.Name="Progress within the current phase, not overall queue progress"/>
-              <Button x:Name="ResultOpenButton" Content="_Open result folder" Visibility="Collapsed" HorizontalAlignment="Left" Margin="0,10,0,0"/>
+              <TextBlock x:Name="FeedbackTitle" Text="Ready to preview" FontSize="18" FontWeight="SemiBold" TextWrapping="Wrap" AutomationProperties.LiveSetting="Polite" />
+              <TextBlock x:Name="SummaryText" Text="Choose your materials, then preview. Nothing changes until you apply." TextWrapping="Wrap" Margin="0,6,0,4" FontSize="13" />
+              <TextBlock x:Name="WorkItemText" TextTrimming="CharacterEllipsis" ToolTip="{Binding Text, RelativeSource={RelativeSource Self}}" />
+              <ProgressBar x:Name="BusyProgress" IsIndeterminate="False" Maximum="100" Height="9" Margin="0,8,0,0" Visibility="Collapsed" AutomationProperties.Name="Progress within the current phase, not overall queue progress" />
+              <Button x:Name="ResultOpenButton" Content="_Open result folder" Visibility="Collapsed" HorizontalAlignment="Left" Margin="0,10,0,0" />
             </StackPanel>
           </Border>
-          <CheckBox x:Name="UnclassifiedOnly" Content="Show only unclassified files" Margin="0,4,0,8"/>
+          <WrapPanel x:Name="ReviewTools" Visibility="Collapsed" Margin="0,0,0,6">
+            <CheckBox x:Name="UnclassifiedOnly" Content="Only unclassified" Margin="0,5,12,5" />
+            <Button x:Name="ClassifyButton" Content="Add rule for selected file…" DockPanel.Dock="Right" IsEnabled="False" />
+          </WrapPanel>
         </StackPanel>
         <TabControl Grid.Row="2" x:Name="ResultsTabs" AutomationProperties.Name="Preview and activity">
-          <TabItem Header="_File destinations"><DataGrid x:Name="PlanGrid" AutoGenerateColumns="False" IsReadOnly="True" CanUserAddRows="False" CanUserDeleteRows="False" SelectionMode="Extended" EnableRowVirtualization="True" GridLinesVisibility="Horizontal" HeadersVisibility="Column" AutomationProperties.Name="Planned file destinations and reasons">
-            <DataGrid.RowStyle><Style TargetType="DataGridRow"><Setter Property="ToolTip" Value="{Binding FullDestination}"/></Style></DataGrid.RowStyle>
-            <DataGrid.Columns><DataGridTextColumn Header="Action" Binding="{Binding Action}" Width="85"/><DataGridTextColumn Header="File" Binding="{Binding File}" Width="170"/><DataGridTextColumn Header="Content comparison" Binding="{Binding ComparisonLabel}" Width="220"/><DataGridTextColumn Header="Destination" Binding="{Binding Destination}" Width="260"/><DataGridTextColumn Header="Why" Binding="{Binding Reason}" Width="280"/></DataGrid.Columns>
-          </DataGrid></TabItem>
-          <TabItem Header="_Activity and errors"><TextBox x:Name="ActivityText" IsReadOnly="True" AcceptsReturn="True" TextWrapping="NoWrap" VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Auto" FontFamily="Consolas" FontSize="12" AutomationProperties.Name="Activity log and error details"/></TabItem>
-          <TabItem Header="Selected file _details"><TextBox x:Name="FileDetails" IsReadOnly="True" TextWrapping="Wrap" VerticalScrollBarVisibility="Auto" AutomationProperties.Name="Selected file source, destination, size and content comparison"/></TabItem>
+          <TabItem Header="_Preview">
+            <DataGrid x:Name="PlanGrid" AutoGenerateColumns="False" IsReadOnly="True" CanUserAddRows="False" CanUserDeleteRows="False" SelectionMode="Extended" EnableRowVirtualization="True" GridLinesVisibility="Horizontal" HeadersVisibility="Column" AutomationProperties.Name="Planned file destinations and reasons">
+              <DataGrid.RowStyle>
+                <Style TargetType="DataGridRow">
+                  <Setter Property="ToolTip" Value="{Binding FullDestination}" />
+                </Style>
+              </DataGrid.RowStyle>
+              <DataGrid.Columns>
+                <DataGridTextColumn Header="Action" Binding="{Binding Action}" Width="80" />
+                <DataGridTextColumn Header="File" Binding="{Binding File}" Width="170" />
+                <DataGridTextColumn Header="Destination" Binding="{Binding Destination}" Width="*" MinWidth="170" />
+                <DataGridTextColumn Header="Content comparison" Binding="{Binding ComparisonLabel}" Width="140" />
+                <DataGridTextColumn Header="Why" Binding="{Binding Reason}" Width="280" />
+              </DataGrid.Columns>
+            </DataGrid>
+          </TabItem>
+          <TabItem Header="_Activity">
+            <TextBox x:Name="ActivityText" IsReadOnly="True" AcceptsReturn="True" TextWrapping="NoWrap" VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Auto" FontFamily="Consolas" FontSize="12" AutomationProperties.Name="Activity log and error details" />
+          </TabItem>
+          <TabItem Header="File _details">
+            <TextBox x:Name="FileDetails" IsReadOnly="True" TextWrapping="Wrap" VerticalScrollBarVisibility="Auto" AutomationProperties.Name="Selected file source, destination, size and content comparison" />
+          </TabItem>
+          <TabItem x:Name="ArchivesTab" Header="ZIPs found">
+            <Grid>
+              <Grid.RowDefinitions>
+                <RowDefinition Height="*" />
+                <RowDefinition Height="Auto" />
+              </Grid.RowDefinitions>
+              <DataGrid x:Name="ArchiveGrid" AutoGenerateColumns="False" IsReadOnly="True" CanUserAddRows="False" CanUserDeleteRows="False" EnableRowVirtualization="True" SelectionMode="Extended" HeadersVisibility="Column" GridLinesVisibility="Horizontal" AutomationProperties.Name="Discovered ZIP archives">
+                <DataGrid.RowStyle>
+                  <Style TargetType="DataGridRow">
+                    <Setter Property="ToolTip" Value="{Binding FullPath}" />
+                  </Style>
+                </DataGrid.RowStyle>
+                <DataGrid.Columns>
+                  <DataGridTextColumn Header="ZIP archive" Binding="{Binding Name}" Width="*" MinWidth="200" />
+                  <DataGridTextColumn Header="Folder" Binding="{Binding Folder}" Width="180" />
+                  <DataGridTextColumn Header="Size" Binding="{Binding Size}" Width="85" />
+                </DataGrid.Columns>
+              </DataGrid>
+              <DockPanel Grid.Row="1" Margin="8">
+                <Button x:Name="UseDetectedButton" Content="Use selected ZIPs" IsEnabled="False" DockPanel.Dock="Right" />
+                <TextBlock Text="Preview checks ZIP contents before you apply." TextWrapping="Wrap" VerticalAlignment="Center" FontSize="12" Margin="0,0,8,0" />
+              </DockPanel>
+            </Grid>
+          </TabItem>
         </TabControl>
-        <TextBox Grid.Row="3" x:Name="JournalText" IsReadOnly="True" TextWrapping="Wrap" Visibility="Collapsed" Margin="0,10,0,0" AutomationProperties.Name="Saved undo record path"/>
+        <TextBox Grid.Row="3" x:Name="JournalText" IsReadOnly="True" TextWrapping="Wrap" Visibility="Collapsed" Margin="0,10,0,0" AutomationProperties.Name="Saved undo record path" />
       </Grid>
     </Grid>
-    <Grid Grid.Row="3" Margin="0,16,0,0"><Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="Auto"/><ColumnDefinition Width="Auto"/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions>
-      <StackPanel VerticalAlignment="Center" Margin="0,0,14,0"><TextBlock x:Name="StatusText" Text="Ready • Preview first" TextWrapping="Wrap"/></StackPanel>
-      <Button Grid.Column="1" x:Name="OpenFolderButton" Content="Open selected folder" IsEnabled="False"/>
-      <StackPanel Grid.Column="2" Orientation="Horizontal"><Button x:Name="CancelButton" Content="_Cancel safely" Visibility="Collapsed"/><Button x:Name="PreviewButton" Content="_Preview changes" FontWeight="SemiBold"/></StackPanel>
-      <Button Grid.Column="3" x:Name="ApplyButton" Content="_Apply changes" FontWeight="SemiBold" IsEnabled="False" Padding="22,10" Margin="0"/>
+    <Grid Grid.Row="3" Margin="0,16,0,0">
+      <Grid.ColumnDefinitions>
+        <ColumnDefinition Width="*" />
+        <ColumnDefinition Width="Auto" />
+        <ColumnDefinition Width="Auto" />
+        <ColumnDefinition Width="Auto" />
+      </Grid.ColumnDefinitions>
+      <StackPanel VerticalAlignment="Center" Margin="0,0,14,0">
+        <TextBlock x:Name="StatusText" Text="Ready • Preview first" TextWrapping="Wrap" />
+      </StackPanel>
+      <Button Grid.Column="1" x:Name="OpenFolderButton" Content="Open folder" IsEnabled="False" />
+      <StackPanel Grid.Column="2" Orientation="Horizontal">
+        <Button x:Name="CancelButton" Content="_Cancel safely" Visibility="Collapsed" />
+        <Button x:Name="PreviewButton" Content="_Preview changes" FontWeight="SemiBold" />
+      </StackPanel>
+      <Button Grid.Column="3" x:Name="ApplyButton" Content="_Apply changes" FontWeight="SemiBold" IsEnabled="False" Padding="22,10" Margin="0" />
     </Grid>
   </Grid>
 </Window>

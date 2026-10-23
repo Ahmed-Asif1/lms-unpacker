@@ -1,6 +1,6 @@
 # Privacy policy
 
-Effective date: 22 October 2026
+Effective date: 23 October 2026
 
 LMS Unpacker is an offline, open-source utility maintained by
 [Ahmed-Asif1](https://github.com/Ahmed-Asif1). It does not send your documents,
@@ -19,9 +19,13 @@ sync provider to transfer files under that provider's settings.
 
 ## Local settings, history and temporary files
 
-- The Windows desktop saves the last successful folder and named workspaces in
+- The Windows desktop saves the last selected/successful folder, separate folder and ZIP
+  picker locations, and named workspaces in
   `%LOCALAPPDATA%\LMS Unpacker\preferences.json`. Workspaces can contain selected paths,
   queued paths, output locations, profile paths and your selected options.
+- On startup, the desktop checks for ZIP filenames beside the EXE and in immediate
+  course folders, or uses an explicit/remembered location. Discovery reads filenames
+  and sizes locally; opening, extracting and deleting archives still requires your action.
 - Saved course profiles remain in the JSON files you choose. They can contain course
   codes, topic names, filename patterns and notes.
 - Existing-file organization writes undo records to `.lms-unpacker/history` beneath

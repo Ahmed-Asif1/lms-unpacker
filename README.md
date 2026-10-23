@@ -28,8 +28,8 @@ is the repository snapshot. Executables and their SHA-256 files are separate rel
 You can keep either EXE anywhere. Supporting files and the offline guide are embedded;
 they are unpacked automatically into a temporary folder and removed on normal exit.
 No need to put the program in your course folders or copy paths: the desktop has
-**Choose folder**, **Choose ZIP**, drag-and-drop and **Open selected folder**.
-It remembers the last successfully processed path locally.
+**Choose folder**, **Choose ZIP**, drag-and-drop and **Open folder**.
+It discovers nearby ZIPs and remembers browsing locations locally.
 
 Click **Visual guide** inside the desktop app, or run the CLI with `--tutorial`.
 The standalone [START-HERE.html](START-HERE.html) also works offline. Its examples are
@@ -40,24 +40,39 @@ a successful preview before Apply. Changing options invalidates the preview. The
 are checked again when applying, so changes made outside the app can affect that run.
 The app waits for active work to finish before closing.
 
+### Automatic discovery and remembered browsing
+
+Place `LMS-Unpacker.exe` in your Courses folder and open it. The app checks beside the
+actual EXE and one level of immediate course folders for ZIP filenames. The **ZIPs found**
+tab shows what is available; **Preview changes** validates contents before Apply.
+Discovery never extracts or deletes materials. **Rescan** refreshes the list after downloads,
+and **Use app folder** returns beside the EXE. Select rows and **Use selected ZIPs** to narrow
+the next preview. Deeper folders, links, hidden folders and known working folders are excluded.
+
+An explicit launch path takes priority. Otherwise ZIPs beside the EXE take priority over
+the remembered location; when none are found there, the app uses your remembered path.
+For source launches, the working directory is the starting folder. First-use folder and ZIP
+pickers start there; each remembers its own last selected location on later visits and launches.
+Choosing a location is enough to save it. Deleted remembered folders fall back safely.
+
 ### Workspaces, queues and destinations
 
-- Open **Saved workspaces and queue**, enter a name, and save the current paths and settings.
-- Select a queued path to **Move up**, **Move down**, **Make first** or **Remove selected**.
-  The main input runs first; Skip keeps the first content for each destination name.
-  Changing the queue requires a fresh preview.
+- Open **Saved workspaces**, enter a name, and save the current paths and settings.
   Select the saved name next time. Saving with the same name updates it; Remove forgets it.
   Paths and settings stay in your local preferences file. Profiles remain at the paths you chose.
+- Open **Additional inputs** and select a path to move **Up**, **Down**, **Make first** or **Remove**.
+  The main input runs first; Skip keeps the first content for each destination name.
+  Changing the queue requires a fresh preview.
 - Select multiple ZIPs in **Choose ZIP**, or drop multiple folders/ZIPs into the window.
-  To combine folder selections, use **Add current path**, then choose the next folder.
-  **Clear queue** removes additional selections. Nested, overlapping scopes are rejected.
+  To combine folder selections, use **Add current**, then choose the next folder.
+  **Clear** removes additional selections. Nested, overlapping scopes are rejected.
 - **ZIP output folder** chooses where extracted files go. Blank uses the existing location.
   Course routing and original archive structure still apply. Loose documents are organized
   in place with undo; the output setting is disabled for the loose-only task.
 - Preview checks the whole queue, including collisions between inputs. Apply stops on the
   first failed queue item. Completed work remains, and errors retain the affected ZIP.
-- **Content comparison** distinguishes identical and different content. Select a row and
-  open **Selected file details** for its source archive, incoming size, destination and
+- **Content comparison** distinguishes identical and different content when conflicts occur. Select a row and
+  open **File details** for its source archive, incoming size, destination and
   SHA-256 comparison. This also identifies conflicts with earlier planned outputs.
 - **History / undo** finds organization records in the selected folders and queue. Choose
   another original folder if needed. Available records are validated in an undo preview;
@@ -81,7 +96,7 @@ For example: `BIO-101 | *cell* | Lectures/Week 02 | Cell biology`.
 Save to a new JSON filename. The app validates the rules and selects your saved copy.
 You can also open and edit a selected custom or example profile; the original stays intact.
 
-After preview, check **Show only unclassified files**, select a row and click
+After preview, check **Only unclassified**, select a row and click
 **Add rule for selected file**. This seeds an exact filename rule and its course at the
 top of the editor. Set a folder/topic, save, then preview again. Change the pattern to
 something like `*cell*` when it should match future downloads. First matching rule wins.
@@ -108,7 +123,7 @@ The offline HTML guide needs a desktop browser to open; CLI extraction also work
 
 ### Start menu (optional)
 
-Click **Add to Start menu**. The app copies its single EXE to
+Open **App settings → Add to Start menu**. The app copies its single EXE to
 `%LOCALAPPDATA%\Programs\LMS Unpacker` and creates your personal Start menu shortcut.
 No admin rights are needed; you can then move/delete the original download.
 Close an older installed instance before adding an updated download.
@@ -317,7 +332,7 @@ The test suite uses temporary fixtures inside `tests/.runs`, including malicious
 paths, CRC failures, conflicts, grouping, course profiles, undo, and junctions. It never
 uses personal course documents. The release builder runs the engine and real WPF-control
 tests, then builds `dist/LMS-Unpacker.exe`, `dist/LMS-Unpacker-CLI.exe`, and the optional
-`dist/LMS-Unpacker-1.3.1.zip` from an explicit file list. It checks both standalone
+`dist/LMS-Unpacker-1.4.0.zip` from an explicit file list. It checks both standalone
 executables, CLI behavior, a shortcut in an isolated test folder, and temporary cleanup.
 Each artifact gets a SHA-256 checksum. Existing versioned ZIPs are not overwritten;
 the stable EXE filenames are refreshed when a new release is built. GitHub Actions runs tests on Windows PowerShell 5.1

@@ -17,6 +17,16 @@ function Wait-Desktop {
     }
     Check-Desktop (-not $state.Busy) 'background operation timed out'
 }
+function Wait-Discovery {
+    $deadline=[DateTime]::UtcNow.AddSeconds(30)
+    while (($state.DiscoveryWorker -or $state.DiscoveryPending -or $discoveryTimer.IsEnabled) -and [DateTime]::UtcNow -lt $deadline) {
+        $frame=[Windows.Threading.DispatcherFrame]::new()
+        $pulse=[Windows.Threading.DispatcherTimer]::new(); $pulse.Interval=[TimeSpan]::FromMilliseconds(30); $pulse.Tag=$frame
+        $pulse.Add_Tick({ param($sender,$event); $sender.Stop(); $sender.Tag.Continue=$false }); $pulse.Start()
+        [Windows.Threading.Dispatcher]::PushFrame($frame)
+    }
+    Check-Desktop (-not $state.DiscoveryWorker -and -not $state.DiscoveryPending) 'discovery timed out'
+}
 function Make-DesktopZip([string]$ZipPath,[string]$Entry,[string]$Content) {
     Add-Type -AssemblyName System.IO.Compression.FileSystem
     $archive = [IO.Compression.ZipFile]::Open($ZipPath,'Create')
@@ -181,10 +191,67 @@ try {
     Check-Desktop ($ui.FeedbackTitle.Text -eq 'Preview stopped - no files changed' -and $ui.ResultOpenButton.Visibility -eq 'Collapsed') 'cancelled preview must not claim files were changed'
     Reset-Feedback
     Write-Host 'PASS: Phase progress, taskbar state, elapsed time and completion feedback'; $desktopPassed++
+    $coursesRoot=Join-Path $fixtureRoot 'Courses'; $math=Join-Path $coursesRoot 'Calculus'
+    $deep=Join-Path $math 'Week 01'; $lab=Join-Path $coursesRoot 'Lab'
+    foreach ($folder in @($coursesRoot,$math,$deep,$lab)) { $null=[IO.Directory]::CreateDirectory($folder) }
+    Make-DesktopZip (Join-Path $coursesRoot 'root.zip') 'root.txt' 'root'
+    Make-DesktopZip (Join-Path $math 'math.zip') 'math.txt' 'math'
+    Make-DesktopZip (Join-Path $deep 'deeper.zip') 'deeper.txt' 'deeper'
+    Make-DesktopZip (Join-Path $lab 'project.zip') 'project.txt' 'project'
+    $appFile=Join-Path $coursesRoot 'app.exe'; [IO.File]::WriteAllText($appFile,'test placeholder')
+    $state.LaunchFolder=Get-LmsLaunchFolder $appFile $fixtureRoot
+    Check-Desktop ($state.LaunchFolder -eq $coursesRoot) 'launch folder must be beside the actual EXE, not its temporary runtime'
+    $startup=Get-LmsStartupSelection '' $state.LaunchFolder $calculus
+    Check-Desktop ($startup.Candidates[0] -eq $coursesRoot -and $startup.Path -eq $calculus) 'portable folder discovery must be tried before the remembered fallback'
+    $explicit=Get-LmsStartupSelection $math $state.LaunchFolder $calculus
+    Check-Desktop ($explicit.Path -eq $math -and $explicit.Candidates.Count -eq 1) 'explicit launch input must win'
+    Set-SelectedPaths @($calculus); $ui.ScanChildren.IsChecked=$true
+    Request-ZipDiscovery -StartupCandidates $startup.Candidates -Force; Wait-Discovery
+    Check-Desktop ($ui.InputPath.Text -eq $coursesRoot -and $ui.ArchiveGrid.Items.Count -eq 2 -and $ui.ResultsTabs.SelectedIndex -eq 3) ('startup archive discovery failed: '+$ui.DiscoveryText.Text)
+    if ($RenderPath) {
+        $window.Content.Measure([Windows.Size]::new(1072,704)); $window.Content.Arrange([Windows.Rect]::new(0,0,1072,704)); $window.Content.UpdateLayout()
+        $bitmap=[Windows.Media.Imaging.RenderTargetBitmap]::new(1072,704,96,96,[Windows.Media.PixelFormats]::Pbgra32); $bitmap.Render($window.Content)
+        $encoder=[Windows.Media.Imaging.PngBitmapEncoder]::new(); $encoder.Frames.Add([Windows.Media.Imaging.BitmapFrame]::Create($bitmap))
+        $imageFile=[IO.File]::Create($RenderPath+'.discovery.png'); try { $encoder.Save($imageFile) } finally { $imageFile.Dispose() }
+    }
+    Check-Desktop ([IO.File]::Exists((Join-Path $coursesRoot 'root.zip')) -and -not [IO.File]::Exists((Join-Path $coursesRoot 'root.txt'))) 'discovery changed materials'
+    $ui.TaskChoice.SelectedIndex=0; $ui.OutputPath.Text=''; $ui.KeepZip.IsChecked=$false
+    Click-Control PreviewButton; Wait-Desktop
+    Check-Desktop ($ui.PlanGrid.Items.Count -eq 2 -and $ui.ResultsTabs.SelectedIndex -eq 0) 'discovery and engine must use the same one-level scan'
+    $ui.ScanChildren.IsChecked=$false; Invalidate-Preview; Request-ZipDiscovery -Force; Wait-Discovery
+    Check-Desktop ($ui.ArchiveGrid.Items.Count -eq 1 -and $ui.ArchiveGrid.Items[0].Name -eq 'root.zip') 'depth zero must exclude course folders'
+    $ui.ArchiveGrid.SelectedIndex=0; Click-Control UseDetectedButton
+    Check-Desktop ($ui.InputPath.Text.EndsWith('root.zip') -and -not $ui.ApplyButton.IsEnabled) 'selecting discovered ZIPs must require a fresh preview'
+    Write-Host 'PASS: Portable startup ZIP discovery, one-level bounds, protected folders and explicit input'; $desktopPassed++
+
+    $state.LastFolderPicker=''; $state.LastZipPicker=''
+    $folderDialog=New-InputFolderDialog
+    try { Check-Desktop ($folderDialog.SelectedPath -eq $coursesRoot) 'first folder picker must start beside the app' } finally { $folderDialog.Dispose() }
+    $zipDialog=New-InputZipDialog
+    Check-Desktop ($zipDialog.InitialDirectory -eq $coursesRoot) 'first ZIP picker must start beside the app'
+    Remember-PickerSelection 'Folder' $math
+    Remember-PickerSelection 'Zip' (Join-Path $coursesRoot 'root.zip')
+    $folderDialog=New-InputFolderDialog
+    try { Check-Desktop ($folderDialog.SelectedPath -eq $math) 'folder picker must remember its own last choice' } finally { $folderDialog.Dispose() }
+    Check-Desktop ((New-InputZipDialog).InitialDirectory -eq $coursesRoot) 'ZIP picker location must stay independent'
+    Check-Desktop ((Get-LmsPickerFolder (Join-Path $fixtureRoot 'gone') $coursesRoot) -eq $coursesRoot) 'missing remembered folders must fall back safely'
+    $originalPreferences=$preferences; $preferences=Join-Path $fixtureRoot 'preferences.json'
+    try {
+        Save-Preferences
+        $persisted=Get-Content -LiteralPath $preferences -Raw -Encoding UTF8 | ConvertFrom-Json
+        Check-Desktop ($persisted.LastFolderPicker -eq $math -and $persisted.LastZipPicker -eq $coursesRoot) 'picker choices must persist across launches'
+    } finally { $preferences=$originalPreferences }
+    foreach ($name in @('WorkspaceExpander','QueueExpander','OptionsExpander','TaskChoice','KeepZip','ScanChildren')) {
+        Check-Desktop ($ui[$name].ToolTip.Length -gt 30 -and [Windows.Automation.AutomationProperties]::GetHelpText($ui[$name]).Length -gt 30) ('missing hover/accessible help: '+$name)
+    }
+    Check-Desktop (-not $ui.OptionsExpander.IsExpanded -and -not $ui.WorkspaceExpander.IsExpanded -and -not $ui.QueueExpander.IsExpanded -and $ui.ReviewTools.Visibility -eq 'Collapsed' -and -not $ui.ClassifyButton.IsEnabled) 'basic unzip view should hide advanced and organization-only tools'
+    Write-Host 'PASS: First-use and remembered picker paths, persistence, hover help and uncluttered defaults'; $desktopPassed++
     Write-Host "All $desktopPassed desktop flow tests passed."
 } finally {
     if ($state.Busy -and $state.Worker) { $state.Worker.Stop(); $state.Worker.Dispose(); $state.Busy = $false }
     $timer.Stop()
+    $discoveryTimer.Stop()
+    if ($state.DiscoveryWorker) { $state.DiscoveryWorker.Stop(); $state.DiscoveryWorker.Dispose(); $state.DiscoveryWorker=$null }
     $resolvedFixture = [IO.Path]::GetFullPath($fixtureRoot)
     $safePrefix = [IO.Path]::GetFullPath((Join-Path $PSScriptRoot '.runs')).TrimEnd('\') + '\'
     if ($resolvedFixture.StartsWith($safePrefix,[StringComparison]::OrdinalIgnoreCase) -and [IO.Path]::GetFileName($resolvedFixture) -like 'desktop-*') {

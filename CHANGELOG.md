@@ -1,5 +1,21 @@
 # Changelog
 
+## 1.4.0
+
+- Discover ZIPs beside the portable EXE and in immediate course folders on startup;
+  fall back to a remembered location, while respecting explicit launch inputs.
+- Add background filename discovery, a ZIPs found tab, Rescan, Use app folder,
+  and selection of discovered archives for a narrower preview.
+- Start first-use folder and ZIP pickers beside the app and remember their locations
+  independently, including selections made before extraction. Migrate old preferences.
+- Group advanced extraction options, saved workspaces, queues and app settings into
+  separate sections. Show organization tools and conflict columns only when relevant.
+- Add descriptive hover tooltips and accessibility help text, including saved-workspace details.
+- Expand the offline guide with interactive scan depth, desktop orientation, searchable
+  option help, startup behavior, keyboard use and recovery explanations.
+- Share scan rules between discovery and processing, with one-level boundaries and
+  existing protection for working folders and filesystem links.
+
 ## 1.3.1
 
 - Make work immediately visible with a prominent progress panel, current file and phase,
