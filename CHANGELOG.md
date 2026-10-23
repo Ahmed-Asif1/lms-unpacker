@@ -1,5 +1,14 @@
 # Changelog
 
+## 1.4.1
+
+- Separate Task, Workspace and App settings; compact header and fixed settings heading.
+- Wrap tooltip prose and long paths using an explicit popup content template.
+- Explain empty result tables and give Apply the primary action styling.
+- Add an offline illustrated engineering handbook and a generated, searchable file/function reference.
+- Add preview-first cleanup tooling that preserves current verified artifacts and unknown files.
+- Correct unclassified-entry help to match actual extraction destinations.
+
 ## 1.4.0
 
 - Discover ZIPs beside the portable EXE and in immediate course folders on startup;

@@ -40,7 +40,7 @@ try {
     if (-not [Windows.SystemParameters]::HighContrast) {
         $window.Background = [Windows.Media.BrushConverter]::new().ConvertFromString('#F5F4EF')
         $window.Foreground = [Windows.Media.BrushConverter]::new().ConvertFromString('#182D2B')
-        foreach ($name in @('PreviewButton','ApplyButton')) {
+        foreach ($name in @('ApplyButton')) {
             $ui[$name].Background = [Windows.Media.BrushConverter]::new().ConvertFromString('#14634B')
             $ui[$name].Foreground = [Windows.Media.Brushes]::White
         }

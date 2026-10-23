@@ -3,6 +3,19 @@ const assert = require('node:assert/strict');
 const fs = require('node:fs');
 const path = require('node:path');
 const vm = require('node:vm');
+function checkOfflinePage(relative) {
+  const filename = path.join(__dirname, '..', relative);
+  const page = fs.readFileSync(filename, 'utf8');
+  const pageIds = [...page.matchAll(/\bid="([^"]+)"/g)].map(m => m[1]);
+  assert.equal(new Set(pageIds).size, pageIds.length, `${relative}: duplicate IDs`);
+  for (const match of page.matchAll(/href="([^"]+)"/g)) {
+    const href = match[1];
+    if (href.startsWith('#')) assert(pageIds.includes(href.slice(1)), `${relative}: missing anchor ${href}`);
+    else if (!/^[a-z]+:/i.test(href)) assert(fs.existsSync(path.resolve(path.dirname(filename), href)), `${relative}: missing local link ${href}`);
+  }
+  assert(!/<(?:script|link|img|iframe)\b[^>]*(?:src|href)=["']https?:/i.test(page), `${relative}: remote asset`);
+  return page;
+}
 const html = fs.readFileSync(path.join(__dirname, '..', 'START-HERE.html'), 'utf8');
 const ids = [...html.matchAll(/\bid="([^"]+)"/g)].map(m => m[1]);
 assert.equal(new Set(ids).size, ids.length, 'HTML IDs must be unique');
@@ -58,4 +71,28 @@ vm.runInNewContext(script, context, {timeout: 1000});
   await nodes.get('copy-launch').fire('click'); assert.match(nodes.get('launch-status').textContent, /Ctrl\+C/);
   await nodes.get('copy-command').fire('click'); assert.match(nodes.get('copy-status').textContent, /Ctrl\+C/);
   console.log('PASS: Offline HTML, anchors, scan depth, searchable help, all modes/groupings, CLI steps, Calculus and clipboard fallback');
+  const handbook = checkOfflinePage('docs/BUILD-IT-YOURSELF.html');
+  const demo = new Map(['policy','same','keep','conflict-result'].map(id => [id,node()]));
+  demo.get('policy').value='Skip'; demo.get('same').value='different'; demo.get('keep').value='delete';
+  const handbookScript = [...handbook.matchAll(/<script>([\s\S]*?)<\/script>/g)].map(m=>m[1]).join('\n');
+  vm.runInNewContext(handbookScript,{document:{getElementById(id){assert(demo.has(id));return demo.get(id);}}},{timeout:1000});
+  for (const policy of ['Skip','Rename','Overwrite']) for (const same of ['same','different']) for (const keep of ['keep','delete']) {
+    demo.get('policy').value=policy; demo.get('same').value=same; demo.get('keep').value=keep;
+    await demo.get('policy').fire('change');
+    const result=demo.get('conflict-result').textContent;
+    assert(result.includes(same==='same'?'Duplicate':policy==='Rename'?'lecture_1.pdf':policy));
+    assert(result.includes(keep==='keep'?'Source ZIP: kept':'Source ZIP: permanently deleted'));
+  }
+  const reference=checkOfflinePage('docs/CODE-REFERENCE.html');
+  assert(reference.includes('Invoke-LmsArchive') && reference.includes('Desktop.xaml'));
+  const entries=[...reference.matchAll(/<article data-entry[^>]*>([\s\S]*?)<\/article>/g)].map(m=>node({},m[1]));
+  const search=node(), count=node();
+  vm.runInNewContext([...reference.matchAll(/<script>([\s\S]*?)<\/script>/g)].map(m=>m[1]).join('\n'),{document:{querySelectorAll(){return entries;},getElementById(id){return id==='search'?search:count;}}},{timeout:1000});
+  search.value='Copy-LmsEntry'; await search.fire('input');
+  assert(entries.some(entry=>!entry.hidden) && entries.some(entry=>entry.hidden));
+  // The reference embeds this test's source, so a fixed test phrase would match itself.
+  search.value='unfindable '+Date.now()+' '+Math.random(); await search.fire('input'); assert(entries.every(entry=>entry.hidden));
+  assert.match(count.textContent,/No matches/);
+  search.value=''; await search.fire('input'); assert(entries.every(entry=>!entry.hidden));
+  console.log('PASS: Handbook links, twelve collision/retention scenarios, complete reference and searchable source');
 })().catch(error => { console.error(error); process.exitCode = 1; });

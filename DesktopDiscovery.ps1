@@ -33,7 +33,7 @@ function Set-DesktopHelp {
         CreateProfileButton='Create a course profile from a courses CSV and optional syllabus CSV. Example columns are explained in the visual guide.'
         GroupChoice='Group lectures by category, known week or named topic. Uncertain week information is never guessed.'
         ClassifyButton='Choose an organization task, preview, and select a file to create a reusable classification rule.'
-        UnclassifiedOnly='Show only files without a confident category. Loose documents stay unchanged; unmatched ZIP entries go into Unclassified.'
+        UnclassifiedOnly='Show only files without a confident category. Loose documents stay unchanged; unmatched ZIP entries are extracted into the selected course or ZIP output folder.'
         UndoButton='Find previous organization records, then preview restoring loose documents. Extraction and deleted ZIPs cannot be undone here.'
         PreviewButton='Read and validate files, then show proposed actions. Preview never extracts, moves or deletes your materials.'
         ApplyButton='Run a successful preview first. Apply rechecks the files and follows your conflict and ZIP deletion settings.'
@@ -47,7 +47,12 @@ function Set-DesktopHelp {
         RemoveShortcutButton='Remove the Start shortcut. The copied app remains in your local Programs folder.'
     }
     foreach ($name in $help.Keys) {
-        $ui[$name].ToolTip=$help[$name]
+        # Popup content lives outside the window's visual tree. Give it the
+        # wrapping template explicitly, instead of relying on inherited text properties.
+        $tip=[Windows.Controls.ToolTip]::new()
+        $tip.Style=$window.FindResource([Windows.Controls.ToolTip])
+        $tip.Content=$help[$name]
+        $ui[$name].ToolTip=$tip
         [Windows.Automation.AutomationProperties]::SetHelpText($ui[$name],$help[$name])
         [Windows.Controls.ToolTipService]::SetInitialShowDelay($ui[$name],350)
         [Windows.Controls.ToolTipService]::SetShowDuration($ui[$name],20000)

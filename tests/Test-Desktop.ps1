@@ -47,6 +47,8 @@ try {
         $content.Measure([Windows.Size]::new(1072,704))
         $content.Arrange([Windows.Rect]::new(0,0,1072,704))
         $content.UpdateLayout()
+        $window.Dispatcher.Invoke([Action]{},[Windows.Threading.DispatcherPriority]::ContextIdle)
+        $content.UpdateLayout()
         $bitmap = [Windows.Media.Imaging.RenderTargetBitmap]::new(1072,704,96,96,[Windows.Media.PixelFormats]::Pbgra32)
         $bitmap.Render($content)
         $encoder = [Windows.Media.Imaging.PngBitmapEncoder]::new()
@@ -242,10 +244,33 @@ try {
         Check-Desktop ($persisted.LastFolderPicker -eq $math -and $persisted.LastZipPicker -eq $coursesRoot) 'picker choices must persist across launches'
     } finally { $preferences=$originalPreferences }
     foreach ($name in @('WorkspaceExpander','QueueExpander','OptionsExpander','TaskChoice','KeepZip','ScanChildren')) {
-        Check-Desktop ($ui[$name].ToolTip.Length -gt 30 -and [Windows.Automation.AutomationProperties]::GetHelpText($ui[$name]).Length -gt 30) ('missing hover/accessible help: '+$name)
+        Check-Desktop ($ui[$name].ToolTip.Content.Length -gt 30 -and [Windows.Automation.AutomationProperties]::GetHelpText($ui[$name]).Length -gt 30) ('missing hover/accessible help: '+$name)
     }
     Check-Desktop (-not $ui.OptionsExpander.IsExpanded -and -not $ui.WorkspaceExpander.IsExpanded -and -not $ui.QueueExpander.IsExpanded -and $ui.ReviewTools.Visibility -eq 'Collapsed' -and -not $ui.ClassifyButton.IsEnabled) 'basic unzip view should hide advanced and organization-only tools'
     Write-Host 'PASS: First-use and remembered picker paths, persistence, hover help and uncluttered defaults'; $desktopPassed++
+    # Measure the actual popup template, including very long unbroken paths.
+    $tip=$ui.OptionsExpander.ToolTip
+    $tip.Measure([Windows.Size]::new([double]::PositiveInfinity,[double]::PositiveInfinity))
+    $tip.Arrange([Windows.Rect]::new([Windows.Point]::new(0,0),$tip.DesiredSize))
+    $tip.UpdateLayout()
+    Check-Desktop ($tip.ActualWidth -le 370 -and $tip.ActualHeight -gt 45) 'long tooltip must wrap into multiple lines within its width'
+    $pathTip=[Windows.Controls.ToolTip]::new(); $pathTip.Style=$tip.Style
+    $pathTip.Content='C:\' + ('very-long-folder-name-' * 30) + 'lecture.pdf'
+    $pathTip.Measure([Windows.Size]::new([double]::PositiveInfinity,[double]::PositiveInfinity))
+    $pathTip.Arrange([Windows.Rect]::new([Windows.Point]::new(0,0),$pathTip.DesiredSize)); $pathTip.UpdateLayout()
+    Check-Desktop ($pathTip.DesiredSize.Width -le 370 -and $pathTip.DesiredSize.Height -gt 80) 'unbroken paths must wrap instead of being clipped'
+    if ($RenderPath) {
+        $bitmap=[Windows.Media.Imaging.RenderTargetBitmap]::new([int][Math]::Ceiling($tip.ActualWidth),[int][Math]::Ceiling($tip.ActualHeight),96,96,[Windows.Media.PixelFormats]::Pbgra32)
+        $bitmap.Render($tip)
+        $encoder=[Windows.Media.Imaging.PngBitmapEncoder]::new(); $encoder.Frames.Add([Windows.Media.Imaging.BitmapFrame]::Create($bitmap))
+        $imageFile=[IO.File]::Create($RenderPath+'.tooltip.png'); try { $encoder.Save($imageFile) } finally { $imageFile.Dispose() }
+    }
+    Check-Desktop ($ui.SettingsPanel.Items.Count -eq 3 -and $ui.SettingsPanel.SelectedIndex -eq 0) 'task settings must be separate from workspace and app settings'
+    # Make the content fit the minimum supported window without losing the fixed heading or actions.
+    $window.Content.Measure([Windows.Size]::new(760,480))
+    $window.Content.Arrange([Windows.Rect]::new(0,0,760,480)); $window.Content.UpdateLayout()
+    Check-Desktop ($ui.SettingsPanel.ActualHeight -gt 80 -and $ui.ResultsTabs.ActualHeight -gt 30 -and $ui.ApplyButton.ActualHeight -ge 38) 'minimum-size layout must retain settings, results and actions'
+    Write-Host 'PASS: Wrapped popup content, long paths, separate settings tabs and compact-window layout'; $desktopPassed++
     Write-Host "All $desktopPassed desktop flow tests passed."
 } finally {
     if ($state.Busy -and $state.Worker) { $state.Worker.Stop(); $state.Worker.Dispose(); $state.Busy = $false }

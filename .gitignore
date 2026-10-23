@@ -20,6 +20,8 @@ dist/
 # Local automation, settings and operating-system metadata
 .codex/
 .agents/
+AGENT.md
+AGENTS.md
 .cache/
 __pycache__/
 *.pyc

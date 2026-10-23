@@ -96,8 +96,8 @@ Pull-request test jobs receive no signing/release permissions or project secrets
 After testing and committing a version, a maintainer can start the release with:
 
 ```bash
-git tag v1.4.0
-git push origin v1.4.0
+git tag v1.4.1
+git push origin v1.4.1
 ```
 
 Users can verify a downloaded artifact using the GitHub CLI:

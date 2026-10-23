@@ -6,6 +6,10 @@ app and Windows/Linux CLI with three jobs: **flatten downloads**, **just unzip**
 [Downloads](docs/DOWNLOADS.md) · [Privacy policy](PRIVACY.md) ·
 [Code signing policy](docs/SIGNING.md) · [Contributing](CONTRIBUTING.md) · [Roadmap](docs/ROADMAP.md)
 
+Want to understand or rebuild it? Open the offline [illustrated engineering handbook](docs/BUILD-IT-YOURSELF.html)
+and [every-file/function reference](docs/CODE-REFERENCE.html). Download these HTML files to read them in a browser;
+the desktop's **Visual guide** also links to the embedded copies.
+
 **Defaults: flatten, skip existing filenames, delete successfully processed ZIPs.**
 When a filename already exists, its incoming version is discarded even if its content
 is different. Choose **Rename** to keep both versions, or **Keep ZIP** to retain the
@@ -57,10 +61,10 @@ Choosing a location is enough to save it. Deleted remembered folders fall back s
 
 ### Workspaces, queues and destinations
 
-- Open **Saved workspaces**, enter a name, and save the current paths and settings.
+- Open **Workspace → Saved workspaces**, enter a name, and save the current paths and settings.
   Select the saved name next time. Saving with the same name updates it; Remove forgets it.
   Paths and settings stay in your local preferences file. Profiles remain at the paths you chose.
-- Open **Additional inputs** and select a path to move **Up**, **Down**, **Make first** or **Remove**.
+- Open **Workspace → Additional inputs** and select a path to move **Up**, **Down**, **Make first** or **Remove**.
   The main input runs first; Skip keeps the first content for each destination name.
   Changing the queue requires a fresh preview.
 - Select multiple ZIPs in **Choose ZIP**, or drop multiple folders/ZIPs into the window.
@@ -123,7 +127,7 @@ The offline HTML guide needs a desktop browser to open; CLI extraction also work
 
 ### Start menu (optional)
 
-Open **App settings → Add to Start menu**. The app copies its single EXE to
+Open **App → App settings → Add to Start menu**. The app copies its single EXE to
 `%LOCALAPPDATA%\Programs\LMS Unpacker` and creates your personal Start menu shortcut.
 No admin rights are needed; you can then move/delete the original download.
 Close an older installed instance before adding an updated download.
@@ -328,11 +332,16 @@ From a repository checkout (the optional modular runtime ZIP omits build tools/t
 pwsh -NoProfile -File .\Build-Linux.ps1
 ```
 
+Regenerate the public source reference with `powershell.exe -NoProfile -ExecutionPolicy Bypass -File .\tools\Build-CodeReference.ps1`.
+After a full build, run `powershell.exe -NoProfile -ExecutionPolicy Bypass -File .\tools\Clean-Workspace.ps1`
+to preview known generated clutter; add `-Apply` after reviewing it. The cleaner preserves
+current checksum-verified deliverables, newer packages and unknown files. Close active builds/tests first.
+
 The test suite uses temporary fixtures inside `tests/.runs`, including malicious ZIP
 paths, CRC failures, conflicts, grouping, course profiles, undo, and junctions. It never
 uses personal course documents. The release builder runs the engine and real WPF-control
 tests, then builds `dist/LMS-Unpacker.exe`, `dist/LMS-Unpacker-CLI.exe`, and the optional
-`dist/LMS-Unpacker-1.4.0.zip` from an explicit file list. It checks both standalone
+`dist/LMS-Unpacker-1.4.1.zip` from an explicit file list. It checks both standalone
 executables, CLI behavior, a shortcut in an isolated test folder, and temporary cleanup.
 Each artifact gets a SHA-256 checksum. Existing versioned ZIPs are not overwritten;
 the stable EXE filenames are refreshed when a new release is built. GitHub Actions runs tests on Windows PowerShell 5.1
